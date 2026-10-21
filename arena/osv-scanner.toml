@@ -1,0 +1,427 @@
+# Suppression scoped to arena/requirements-llm-guard.txt only.
+#
+# redstamp's own supply chain is not affected by anything below: none of these
+# packages ship in the npm package (package.json files: ["src"]) and none are
+# reachable from redstamp code. They are the pinned dependency closure of a
+# COMPETITOR the arena scores — LLM Guard 0.3.16 — installed only inside the
+# arena job on a throwaway runner.
+#
+# These versions were always what CI installed. Freezing the closure with
+# hashes did not introduce them; it made them visible to OSV, which is the
+# point of pinning. Every one is pinned exactly by llm-guard 0.3.16 itself, so
+# the only way to "fix" them is to benchmark a version of LLM Guard its own
+# maintainers do not ship. That would be a dishonest test, so it stays pinned
+# and the exposure is documented here instead.
+#
+# Recheck trigger: a new llm-guard release. See arena/requirements-llm-guard.in.
+
+# ── cryptography ────────────────────────────────────────────────────
+[[IgnoredVulns]]
+id = "PYSEC-2026-2141"
+ignoreUntil = 2026-11-16
+reason = """
+cryptography 44.0.3 in the LLM Guard closure. Not bumpable here:
+llm-guard 0.3.16 pins presidio-anonymizer==2.2.358, which caps
+cryptography<44.1. Raising it would mean benchmarking a competitor against a
+dependency set its own maintainers do not ship, which is not a fair test.
+Not reachable from the arena either: the arena drives LLM Guard's
+prompt-injection scanner over a fixed corpus of shell strings — no X.509
+verification, no PKCS#7, no TLS. Clears when llm-guard widens the presidio
+pin; re-check on the ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-35"
+ignoreUntil = 2026-11-16
+reason = """
+cryptography 44.0.3 in the LLM Guard closure. Not bumpable here:
+llm-guard 0.3.16 pins presidio-anonymizer==2.2.358, which caps
+cryptography<44.1. Raising it would mean benchmarking a competitor against a
+dependency set its own maintainers do not ship, which is not a fair test.
+Not reachable from the arena either: the arena drives LLM Guard's
+prompt-injection scanner over a fixed corpus of shell strings — no X.509
+verification, no PKCS#7, no TLS. Clears when llm-guard widens the presidio
+pin; re-check on the ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-3552"
+ignoreUntil = 2026-11-16
+reason = """
+cryptography 44.0.3 in the LLM Guard closure. Not bumpable here:
+llm-guard 0.3.16 pins presidio-anonymizer==2.2.358, which caps
+cryptography<44.1. Raising it would mean benchmarking a competitor against a
+dependency set its own maintainers do not ship, which is not a fair test.
+Not reachable from the arena either: the arena drives LLM Guard's
+prompt-injection scanner over a fixed corpus of shell strings — no X.509
+verification, no PKCS#7, no TLS. Clears when llm-guard widens the presidio
+pin; re-check on the ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-3553"
+ignoreUntil = 2026-11-16
+reason = """
+cryptography 44.0.3 in the LLM Guard closure. Not bumpable here:
+llm-guard 0.3.16 pins presidio-anonymizer==2.2.358, which caps
+cryptography<44.1. Raising it would mean benchmarking a competitor against a
+dependency set its own maintainers do not ship, which is not a fair test.
+Not reachable from the arena either: the arena drives LLM Guard's
+prompt-injection scanner over a fixed corpus of shell strings — no X.509
+verification, no PKCS#7, no TLS. Clears when llm-guard widens the presidio
+pin; re-check on the ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-3554"
+ignoreUntil = 2026-11-16
+reason = """
+cryptography 44.0.3 in the LLM Guard closure. Not bumpable here:
+llm-guard 0.3.16 pins presidio-anonymizer==2.2.358, which caps
+cryptography<44.1. Raising it would mean benchmarking a competitor against a
+dependency set its own maintainers do not ship, which is not a fair test.
+Not reachable from the arena either: the arena drives LLM Guard's
+prompt-injection scanner over a fixed corpus of shell strings — no X.509
+verification, no PKCS#7, no TLS. Clears when llm-guard widens the presidio
+pin; re-check on the ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-537c-gmf6-5ccf"
+ignoreUntil = 2026-11-16
+reason = """
+cryptography 44.0.3 in the LLM Guard closure. Not bumpable here:
+llm-guard 0.3.16 pins presidio-anonymizer==2.2.358, which caps
+cryptography<44.1. Raising it would mean benchmarking a competitor against a
+dependency set its own maintainers do not ship, which is not a fair test.
+Not reachable from the arena either: the arena drives LLM Guard's
+prompt-injection scanner over a fixed corpus of shell strings — no X.509
+verification, no PKCS#7, no TLS. Clears when llm-guard widens the presidio
+pin; re-check on the ignoreUntil date.
+"""
+
+
+# ── transformers ────────────────────────────────────────────────────
+[[IgnoredVulns]]
+id = "PYSEC-2025-211"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-212"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-213"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-214"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-215"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-216"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-217"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2025-218"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-1977"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-1980"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-1981"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-1983"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-1986"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-1988"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-2288"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-2289"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-2290"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Mostly ReDoS in tokenizer and config parsing,
+reached by attacker-controlled model files or chat templates — the arena
+supplies neither: it loads one public pinned classifier
+(protectai/deberta-v3-base-prompt-injection-v2) and feeds it a fixed corpus.
+Clears when llm-guard bumps its transformers pin; re-check on the
+ignoreUntil date.
+"""
+
+
+[[IgnoredVulns]]
+id = "GHSA-xrqw-3rrv-vx5w"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Arbitrary file write via a chat template name
+passed to save_pretrained — the arena never writes a model: the adapter builds
+PromptInjection and Secrets, runs scan_prompt over a fixed corpus of shell
+strings, and reaches no save_pretrained or push_to_hub path. Patched in
+transformers 5.10.0, a major bump llm-guard 0.3.16 does not accept. Clears
+when llm-guard bumps its transformers pin; re-check on the ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "PYSEC-2026-4174"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Remote custom generation code is cached before the
+trust_remote_code check, through GenerativePreTrainedModel.load_custom_generate.
+The arena never reaches it: the adapter builds PromptInjection, a
+text-classification pipeline that never calls generate(), and Secrets, which
+loads no model, and runs scan_prompt over a fixed corpus of shell strings. No
+custom_generate argument and no generation model exist in the arena. Patched in
+transformers 5.9.0, a major bump llm-guard 0.3.16 does not accept. Clears when
+llm-guard bumps its transformers pin; re-check on the ignoreUntil date.
+"""
+
+[[IgnoredVulns]]
+id = "GHSA-x9r9-c232-4q39"
+ignoreUntil = 2026-11-16
+reason = """
+transformers 4.51.3 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins transformers==4.51.3 exactly, so any other version is a different
+tool than the one under test. Remote custom generation code is cached before the
+trust_remote_code check, through GenerativePreTrainedModel.load_custom_generate.
+The arena never reaches it: the adapter builds PromptInjection, a
+text-classification pipeline that never calls generate(), and Secrets, which
+loads no model, and runs scan_prompt over a fixed corpus of shell strings. No
+custom_generate argument and no generation model exist in the arena. Patched in
+transformers 5.9.0, a major bump llm-guard 0.3.16 does not accept. Clears when
+llm-guard bumps its transformers pin; re-check on the ignoreUntil date.
+"""
+
+# ── json-repair ─────────────────────────────────────────────────────
+[[IgnoredVulns]]
+id = "GHSA-xf7x-x43h-rpqh"
+ignoreUntil = 2026-11-16
+reason = """
+json-repair 0.44.1 in the LLM Guard closure. Not bumpable: llm-guard
+0.3.16 pins json-repair==0.44.1 exactly. Unbounded recursion on a circular
+JSON Schema $ref — the arena never hands LLM Guard a JSON schema, only shell
+command strings. Clears when llm-guard bumps its pin; re-check on the
+ignoreUntil date.
+"""
+
+# ── nltk ────────────────────────────────────────────────────────────
+[[IgnoredVulns]]
+id = "GHSA-8mgp-746c-j5xp"
+ignoreUntil = 2026-11-16
+reason = """
+nltk 3.10.3 in the LLM Guard closure. NO patched version exists: the advisory
+covers <= 3.10.3 and upstream has shipped no fix, so unlike the entries above
+this is not "won't bump" but "nothing to bump to". llm-guard 0.3.16 declares
+nltk>=3.9.1,<4 — a range, not an exact pin — so the resolved 3.10.3 is simply
+the newest 3.x.
+
+Not reached in the arena's configuration. The advisory concerns nltk's
+model-artifact APIs (nltk.download and friends) touching files outside their
+allowed root. llm-guard calls nltk.download in exactly two places: the
+Sentiment scanner, which the adapter never instantiates, and
+util.split_text_by_sentences, which PromptInjection reaches ONLY under
+MatchType.SENTENCE. arena/adapters/llm_guard_adapter.py pins
+match_type=MatchType.FULL, whose branch returns [prompt] and never tokenizes.
+The Secrets scanner uses detect-secrets and presidio-anonymizer and touches no
+nltk path.
+
+NOTE: this rationale is CONFIGURATION-dependent, not structural. Switching the
+adapter to MatchType.SENTENCE, or adding Sentiment, Gibberish, Language or
+Toxicity to its scanner list, makes nltk.download reachable and invalidates
+this suppression. Re-check if the adapter's scanner set changes.
+"""

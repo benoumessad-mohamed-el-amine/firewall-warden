@@ -1,0 +1,19 @@
+node_modules/
+*.log
+*.tmp
+warden-audit.jsonl
+warden.config.json
+.DS_Store
+dist/
+
+# Python adapter bytecode (arena)
+__pycache__/
+*.pyc
+
+# native fast-hook build artifacts (per-platform; ship via GitHub Releases)
+native/warden-fast
+native/warden-fast.exe
+native/warden-fast-*
+# fuzz.yml / fuzz/run.mjs working dirs
+fuzz/corpus/
+fuzz/crashes/

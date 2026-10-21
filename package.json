@@ -1,0 +1,95 @@
+{
+  "name": "firewall-agent",
+  "version": "0.9.0",
+  "description": "A deterministic, offline firewall for AI agent tool calls: risk tiers, policy, secret-exfil and prompt-injection defense, cross-call taint tracking, tamper-evident audit, and MCP middleware. No model in the decision path; zero runtime dependencies.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.mts",
+      "default": "./src/index.mjs"
+    },
+    "./mcp": {
+      "types": "./src/mcp.d.mts",
+      "default": "./src/mcp.mjs"
+    },
+    "./judge": {
+      "types": "./src/judge.d.mts",
+      "default": "./src/judge.mjs"
+    },
+    "./wrap": {
+      "types": "./src/wrap.d.mts",
+      "default": "./src/wrap.mjs"
+    },
+    "./daemon": {
+      "types": "./src/daemon.d.mts",
+      "default": "./src/daemon.mjs"
+    },
+    "./client": {
+      "types": "./src/client.d.mts",
+      "default": "./src/client.mjs"
+    },
+    "./audit": {
+      "types": "./src/audit.d.mts",
+      "default": "./src/audit.mjs"
+    },
+    "./scan": {
+      "types": "./src/scan.d.mts",
+      "default": "./src/scan.mjs"
+    },
+    "./taint": {
+      "types": "./src/taint.d.mts",
+      "default": "./src/taint.mjs"
+    }
+  },
+  "types": "./src/index.d.mts",
+  "bin": {
+    "redstamp": "src/cli.mjs",
+    "redstamp-mcp": "src/mcp-proxy-cli.mjs",
+    "redstamp-hook": "src/cc-hook.mjs",
+    "redstamp-serve": "src/daemon-cli.mjs",
+    "warden": "src/cli.mjs",
+    "warden-mcp": "src/mcp-proxy-cli.mjs",
+    "warden-hook": "src/cc-hook.mjs",
+    "warden-serve": "src/daemon-cli.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "demo": "node demo/demo.mjs",
+    "smoke": "node demo/mcp-smoke.mjs",
+    "smoke:native": "node native/smoke.mjs",
+    "bench": "node bench/run.mjs",
+    "bench:redos": "node bench/redos.mjs",
+    "bench:stress": "node bench/stress.mjs && node bench/stress2.mjs && node bench/edgecases.mjs",
+    "bench:mcp": "node bench/mcp-redteam.mjs",
+    "bench:max": "node bench/maxstress.mjs",
+    "bench:native": "node native/bench.mjs",
+    "fuzz": "node fuzz/run.mjs",
+    "arena": "node arena/run.mjs",
+    "arena:corpus": "node arena/build-corpus.mjs",
+    "arena:external": "node arena/run.mjs --corpus external-corpus.json",
+    "arena:frameworks": "node arena/frameworks.mjs",
+    "arena:thirdparty": "node arena/thirdparty.mjs",
+    "arena:build-tldr": "node arena/build-thirdparty-tldr.mjs",
+    "arena:build-atomic": "node arena/build-thirdparty-atomic.mjs"
+  },
+  "keywords": [
+    "agent",
+    "security",
+    "mcp",
+    "llm",
+    "guardrails",
+    "ai-safety",
+    "firewall",
+    "own-your-stack"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "src"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

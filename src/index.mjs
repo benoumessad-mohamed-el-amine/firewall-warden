@@ -1,0 +1,241 @@
+// warden — own your agent security. A guard between an agent and its tools.
+import path from 'node:path';
+import { TIER, ORDER, worst, classify, SHELL, NET, WRITE, shellEgressHosts, shellEgressUnresolved } from './classify.mjs';
+import { scanSecrets, injectionHits, obfuscationHits, isExternal, ipScope, safeStringify, asStr, METADATA_RE, PERSISTENCE_PATH_RE } from './scan.mjs';
+import { matchRule, DEFAULT_POLICY, loadPolicy, normalizePolicy, resolveConfig } from './policy.mjs';
+import { AuditLog } from './audit.mjs';
+
+export { TIER, AuditLog, classify, loadPolicy, matchRule, resolveConfig };
+
+// Destination-keyed string values of a write action's input (path/dest/target/…).
+// A poisoned write can name its target `dest`/`output`/`to` instead of `path`;
+// CONTENT keys (the file body) are intentionally excluded — that's data, not a target.
+const DEST_KEY_RE = /(?:^|_)(?:path|filepath|file|dest|destination|target|output|out|to|location|uri)$/i;
+function destPaths(input) {
+  const out = [];
+  if (!input || typeof input !== 'object') return out;
+  for (const [k, v] of Object.entries(input)) if (typeof v === 'string' && DEST_KEY_RE.test(k)) out.push(v);
+  return out;
+}
+
+// Normalize a path for write-root confinement: unify separators and COLLAPSE
+// `.`/`..` segments, so `root/../../etc/x` can't traverse out of the root and a
+// trailing slash doesn't matter. Uses posix semantics on both platforms for a
+// deterministic result. (`..` that walks above the root stays as leading `..`,
+// which no configured root prefixes — correctly flagged as outside.)
+function normPath(p) {
+  const n = path.posix.normalize(String(p).replace(/\\/g, '/'));
+  // posix.normalize already collapses runs of `/` to one, so there is at most a
+  // single trailing slash to drop — strip it without a `\/+$`-style regex (that
+  // pattern trips a polynomial-ReDoS scanner on repeated-slash input, moot here
+  // but avoided). Keep the bare root `/` and the relative marker `.` intact.
+  if (n === '/' || n === '.') return n;
+  return n.endsWith('/') ? n.slice(0, -1) : n;
+}
+// True iff `p` is the root itself or genuinely BENEATH it — a `startsWith`
+// on the normalized path with a separator boundary, so a shared-prefix sibling
+// (`/srv/data` vs `/srv/database`) does not count as inside.
+function withinRoots(p, roots) {
+  const target = normPath(p);
+  return roots.some((r) => {
+    const root = normPath(r);
+    return target === root || target.startsWith(root === '/' ? '/' : root + '/');
+  });
+}
+
+/** Deterministic verdict for an action. No I/O, no LLM — pure + offline. */
+export function decide(action, policy = DEFAULT_POLICY, skillText = '') {
+  // Fail safe on malformed input: a null/non-object action or a non-string tool
+  // must yield a verdict, never throw into the host agent.
+  action = action || {};
+  // Normalize so a malformed policy (e.g. a scalar `allow`) can NEVER make the
+  // rule-matching below throw — a guard error must not fail OPEN on a black action.
+  const { allow, deny, egressAllow, writeRoots } = normalizePolicy(policy);
+  const tool = asStr(action.tool || '').toLowerCase();
+  const base = classify(action);
+  // Bound the scanned text. Secrets / injection phrases / metadata hosts that
+  // matter appear early, and the classifier already caps the command at 16KB —
+  // so a giant input field can't turn each firewall call into a heavy (linear
+  // but unbounded) scan (a DoS-amplification vector). 64KB is a generous window.
+  const SCAN_CAP = 65536;
+  const fullStr = safeStringify(action.input || {});
+  const inputStr = fullStr.length > SCAN_CAP ? fullStr.slice(0, SCAN_CAP) : fullStr; // reused by scanSecrets + injection/SSRF below
+  const secrets = scanSecrets(action, inputStr);
+  let tier = base.tier;
+  const why = [...base.why];
+
+  const active = SHELL.includes(tool) || NET.includes(tool); // executes or sends — only here is data "in motion"
+  const externalHosts = secrets.hosts.filter((h) => isExternal(h, egressAllow));
+
+  // exfil = a secret + an external destination, but ONLY when the tool actually sends (shell/net).
+  // A secret sitting in file content (write/read) is flagged red, not treated as exfiltration.
+  if (secrets.hasSecret && externalHosts.length && active) {
+    tier = TIER.BLACK;
+    why.push('☠ EXFIL: ' + secrets.flags.join('; ') + ' → external ' + externalHosts.join(','));
+  } else if (secrets.hasSecret) {
+    tier = worst(tier, TIER.RED);
+    why.push(...secrets.flags.map((f) => '⚠ ' + f));
+  }
+  // injection: a poisoned skill is always black; injection in an executable arg is black;
+  // injection patterns in passive file content are flagged red (it's data, not execution).
+  // Fail-safe: skillText is a documented entrypoint arg. A non-string (Symbol,
+  // number, object) must classify safely, never throw — a Symbol reaching the
+  // scanner's regex .test() would raise "Cannot convert a Symbol to a string"
+  // and crash the host. Coerce anything non-string to '' (no scannable text).
+  const injSkill = injectionHits(typeof skillText === 'string' ? skillText : '');
+  if (injSkill.length) { tier = TIER.BLACK; why.push(...injSkill.map((f) => '☠ poisoned-skill: ' + f)); }
+  // Injection scanning targets DATA the agent consumes (skill text, file content,
+  // request bodies) — NOT shell-command args. A human running `echo "ignore all
+  // previous instructions"` or `grep "you are now in developer mode"` is benign;
+  // shell threats are the classifier's job. Scanning command text for injection
+  // English only false-blocks legitimate work, so skip it for shell tools.
+  const injInput = SHELL.includes(tool) ? [] : injectionHits(inputStr);
+  if (injInput.length) { const it = active ? TIER.BLACK : TIER.RED; tier = worst(tier, it); why.push(...injInput.map((f) => (active ? '☠' : '⚠') + ' injection: ' + f)); }
+  // SSRF — only meaningful for tools that fetch/exec. Cloud-metadata hosts and
+  // the link-local range (169.254/16) are credential-theft-grade (black); an
+  // http(s) request to an RFC1918 internal address is gated (red). Loopback is
+  // intentionally NOT flagged (dev-server requests would false-positive).
+  if (active) {
+    const scopes = secrets.hosts.map(ipScope);
+    if (METADATA_RE.test(inputStr) || scopes.includes('linklocal')) {
+      tier = TIER.BLACK; why.push('☠ cloud-metadata / link-local SSRF (credential theft)');
+    } else if (scopes.includes('private')) {
+      tier = worst(tier, TIER.RED); why.push('⚠ http request to an internal/RFC1918 address (SSRF risk)');
+    }
+  }
+  // persistence/backdoor: writing into a known persistence location. Only a
+  // string path is a real write target; a non-string (Symbol/array/object) path
+  // fails safe to '' rather than throwing on coercion.
+  const wpath = typeof action.input?.path === 'string' ? action.input.path : '';
+  if (WRITE.includes(tool)) {
+    for (const dp of destPaths(action.input)) {
+      if (PERSISTENCE_PATH_RE.test(dp)) { tier = TIER.BLACK; why.push('☠ persistence target: ' + dp); break; }
+    }
+  }
+  if (NET.includes(tool) && externalHosts.length && egressAllow.length) {
+    tier = worst(tier, TIER.RED);
+    why.push('⚠ egress to non-allowlisted host(s): ' + externalHosts.join(','));
+  }
+  // The same allowlist for a shell's network clients: `curl`/`wget` to a host the
+  // policy does not list is gated like a fetch to it. Only hosts a client in
+  // command position contacts count, so a URL in an echo or a grep pattern does not.
+  // An argv array is the same command as its joined words.
+  const cmdOf = (v) => (typeof v === 'string' ? v
+    : Array.isArray(v) ? v.map((w) => { const s = asStr(w); return /[\s'"]/.test(s) ? `'${s.replace(/'/g, "'\\''")}'` : s; }).join(' ')
+    : '');
+  const cmdText = cmdOf(action.input?.command) || cmdOf(action.input?.cmd);
+  if (egressAllow.length && cmdText && !WRITE.includes(tool) && !NET.includes(tool)) {
+    const shellHosts = shellEgressHosts(cmdText).filter((h) => isExternal(h, egressAllow));
+    if (shellHosts.length) {
+      tier = worst(tier, TIER.RED);
+      why.push('⚠ shell egress to non-allowlisted host(s): ' + shellHosts.join(','));
+    }
+    // A network call whose destination is decided at run time cannot be checked
+    // against the allowlist, so it is gated the same way.
+    const unresolved = shellEgressUnresolved(cmdText);
+    if (unresolved.length) {
+      tier = worst(tier, TIER.RED);
+      why.push('⚠ shell egress the allowlist cannot check: ' + unresolved.join(', '));
+    }
+  }
+  if (writeRoots && WRITE.includes(tool)) {
+    const p = wpath;
+    if (p && !withinRoots(p, writeRoots)) {
+      tier = worst(tier, TIER.RED);
+      why.push('⚠ write outside allowed roots: ' + p);
+    }
+  }
+
+  // obfuscation router: a command that *smells* evasive but classified clean is
+  // routed to the judge (marked gray) WITHOUT changing the deterministic verdict
+  // — so with no judge configured it still allows (no false block), and with a
+  // judge it gets deobfuscated. This is how the evasion bucket reaches the judge.
+  let smells = [];
+  // Run the obfuscation smell whenever the SHELL RULESET ran — which classify()
+  // does for a shell tool OR any non-write tool carrying a command field (the
+  // tool-spoof path a poisoned server uses). Gating this on SHELL alone left a
+  // hole: a spoofed `read`/`get` tool smuggling an obfuscated command
+  // (`X=rm;$X -rf /`, `eval "$UNSAFE"`) got the deterministic rules but never the
+  // gray flag, so the judge — which is what deobfuscates that exact residue —
+  // was never consulted, defeating the tool-spoof defense it was paired with.
+  const cmdField = action.input?.command ?? action.input?.cmd;
+  const ranShellRules = SHELL.includes(tool) || (cmdField != null && !WRITE.includes(tool));
+  if (ranShellRules && tier !== TIER.BLACK) {
+    const ctext = typeof cmdField === 'string' ? cmdField : inputStr;
+    smells = obfuscationHits(ctext.length > SCAN_CAP ? ctext.slice(0, SCAN_CAP) : ctext);
+    if (smells.length) why.push(...smells.map((f) => '· obfuscation smell → judge: ' + f));
+  }
+
+  const denied = deny.find((r) => matchRule(r, action));
+  const allowed = allow.find((r) => matchRule(r, action));
+
+  let decision;
+  if (denied) { decision = 'block'; why.push('✗ denied by rule: ' + denied); }
+  else if (tier === TIER.BLACK) decision = 'block';
+  else if (allowed) { decision = 'allow'; why.push('✓ pre-approved by rule: ' + allowed); }
+  else if (tier === TIER.RED) decision = 'approve';
+  else decision = 'allow';
+
+  return { tool: action.tool, tier, decision, why, externalHosts, gray: decision === 'approve' || tier === TIER.YELLOW || smells.length > 0 };
+}
+
+export const recordVerdict = (audit, action, v) =>
+  audit && audit.record({ ts: new Date().toISOString(), tool: action.tool, input: action.input, tier: v.tier, decision: v.decision, why: v.why });
+
+/** Sync deterministic check (optionally records to an AuditLog). */
+export function check(action, policy = DEFAULT_POLICY, { audit = null, skillText = '' } = {}) {
+  const v = decide(action, policy, skillText);
+  recordVerdict(audit, action, v);
+  return v;
+}
+
+/**
+ * Async check that consults an optional LLM judge for gray-zone actions.
+ * The judge can only ESCALATE risk — a deterministic BLACK is final, and the
+ * judge is never asked to bless something the rules already blocked.
+ */
+export async function checkAsync(action, policy = DEFAULT_POLICY, { audit = null, skillText = '', judge = null } = {}) {
+  const v = decide(action, policy, skillText);
+  await applyJudge(action, v, judge);
+  recordVerdict(audit, action, v);
+  return v;
+}
+
+/**
+ * Apply an optional LLM judge to a verdict, IN PLACE. Shared by checkAsync and
+ * the MCP surface's guardMcpCallAsync so the escalate-only invariant lives in
+ * exactly ONE place — a second copy that drifted could let a judge LOWER a
+ * verdict, which is the one thing it must never do.
+ *
+ * Invariants, all load-bearing:
+ *  - consulted ONLY when a judge exists, the verdict is gray, and it is not
+ *    already blocked (never ask a judge to bless what the rules blocked);
+ *  - can only ESCALATE — an equal or lower tier is recorded as a note, never
+ *    applied;
+ *  - a judge throw/timeout is swallowed and the deterministic verdict kept, so
+ *    an outage degrades to deterministic-only rather than failing an action open.
+ *
+ * Takes the verdict as an argument instead of recomputing it, so a caller that
+ * has already escalated by other means — the MCP shell-spoof leaf scan — gets
+ * the judge applied to THAT verdict rather than to a weaker one. That is the
+ * whole reason guardMcpCallAsync can exist without duplicating this logic.
+ *
+ * @returns the same verdict object, mutated.
+ */
+export async function applyJudge(action, v, judge) {
+  if (!judge || v.decision === 'block' || !v.gray) return v;
+  try {
+    const j = await judge(action, v);
+    if (j && j.tier && ORDER[j.tier] > ORDER[v.tier]) {
+      v.tier = j.tier;
+      v.why.push(`🧠 judge escalated → ${j.tier}: ${j.reason || 'unspecified'}`);
+      if (j.tier === TIER.BLACK) v.decision = 'block';
+      else if (j.tier === TIER.RED && v.decision === 'allow') v.decision = 'approve';
+    } else if (j && j.reason) {
+      v.why.push(`🧠 judge: ${j.reason}`);
+    }
+  } catch {
+    v.why.push('🧠 judge unavailable (fail-safe: kept deterministic verdict)');
+  }
+  return v;
+}
