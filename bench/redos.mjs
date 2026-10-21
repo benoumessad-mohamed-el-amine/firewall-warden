@@ -3,6 +3,7 @@
 // Run: node bench/redos.mjs
 import { BLACK_SHELL, RED_SHELL, YELLOW_SHELL } from '../src/classify.mjs';
 import { SECRET_RE, INJECTION_RE, OBFUSCATION_RE, METADATA_RE, SENSITIVE_PATH_RE, PERSISTENCE_PATH_RE, SECRET_ENV_RE, URL_RE } from '../src/scan.mjs';
+import { matchPathGlob } from '../src/policy.mjs';
 
 const N = 16384;                       // the classifier's input cap
 const evilStrings = [
@@ -45,6 +46,32 @@ for (const [name, re, why] of all) {
     if (ms > BUDGET) { flagged++; console.log(`⚠ ${ms.toFixed(1)}ms  ${name}  ${why}  (input ${s.slice(0, 14)}…)`); }
   }
 }
-console.log(`\n${all.length} patterns × ${evilStrings.length} adversarial inputs @ ${N}B`);
+
+// Also test path glob matcher against pathological glob patterns (no regex, linear-time)
+const pathologicalGlobs = [
+  '**/**/**/**/**/**/**/**/**/**/target',
+  ('**/' .repeat(50)) + 'target',
+  ('*/' .repeat(50)) + '*',
+  '**/' + ('a/'.repeat(50)) + '**/' + ('b/'.repeat(50)) + 'c',
+];
+const pathologicalPaths = [
+  ('/a'.repeat(100)) + '/target',
+  '/' + ('a/'.repeat(200)),
+  '/a/b/c/d/e/f/g/h',
+  '/' + ('a/'.repeat(50)) + ('b/'.repeat(50)) + 'c',
+];
+
+for (const glob of pathologicalGlobs) {
+  for (const p of pathologicalPaths) {
+    const t = process.hrtime.bigint();
+    matchPathGlob(glob, p);
+    const ms = Number(process.hrtime.bigint() - t) / 1e6;
+    if (ms > worstMs) { worstMs = ms; worstName = 'matchPathGlob :: ' + glob.slice(0, 30); }
+    if (ms > BUDGET) { flagged++; console.log(`⚠ ${ms.toFixed(1)}ms  matchPathGlob  ${glob}  (input ${p.slice(0, 14)}…)`); }
+  }
+}
+
+console.log(`\n${all.length} patterns × ${evilStrings.length} adversarial inputs @ ${N}B + path glob tests`);
 console.log(`worst: ${worstMs.toFixed(2)}ms (${worstName})`);
 console.log(flagged ? `❌ ${flagged} pattern×input over ${BUDGET}ms budget` : `✅ all under ${BUDGET}ms — no catastrophic backtracking`);
+

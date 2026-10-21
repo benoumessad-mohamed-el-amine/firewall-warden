@@ -806,10 +806,10 @@ function destHostOf(arg) {
 // `unk`, when given, collects why a network client's destination cannot be read
 // from the text (a connection override, an argument expanded at run time, input
 // fed by xargs). Under an allowlist such a call cannot be vouched for.
-function collectEgress(cmd, depth, out, unk = null) {
+function collectEgress(cmd, depth, out, unk = null, dests = null) {
   if (depth > 3 || out.length > 64) return;
   const { cmds, subs } = shellCommands(cmd);
-  for (const s of subs) collectEgress(s, depth + 1, out, unk);
+  for (const s of subs) collectEgress(s, depth + 1, out, unk, dests);
   for (const words of cmds) {
     const unescape = (w) => w.replace(/\\(.)/g, '$1');
     const names = (w) => [baseName(unescape(w)), baseName(w)];   // POSIX escape, Windows path
@@ -840,7 +840,7 @@ function collectEgress(cmd, depth, out, unk = null) {
     const args = words.slice(k + 1).map(unescape);
     if (SHELLS.has(name)) {                 // bash -c "…", powershell -Command "…", cmd /c "…"
       const body = args.filter((a) => !/^[-/]\w+$/.test(a)).join(' ');
-      if (body) collectEgress(body, depth + 1, out, unk);
+      if (body) collectEgress(body, depth + 1, out, unk, dests);
       continue;
     }
     const client = Object.hasOwn(CLIENTS, name) ? CLIENTS[name] : null;
@@ -863,7 +863,7 @@ function collectEgress(cmd, depth, out, unk = null) {
             const dest = value ? value.replace(/^[a-z]+:(?!\/\/)/i, '') : '';   // httpie: `http:http://proxy`
             if (dest && unk && hostIsDynamic(dest)) unk.push(`${name} ${flag}`);
             const h = dest ? destHostOf(dest) : null;
-            if (h) out.push(h);
+            if (h) { out.push(h); if (dests) dests.push(dest); }
             continue;
           }
           // `-o out`, and a short cluster ending in a value flag (`-sSLo out`).
@@ -881,7 +881,7 @@ function collectEgress(cmd, depth, out, unk = null) {
         if (client.dests === 'first' && /^[A-Z]+$/.test(arg)) continue;   // an httpie METHOD
         if (unk && hostIsDynamic(arg)) unk.push(`${name} ${arg.slice(0, 40)}`);
         const h = destHostOf(arg);
-        if (h) out.push(h);
+        if (h) { out.push(h); if (dests) dests.push(arg); }
         if (client.dests === 'first') break;
       }
     } else if (name === 'git') {
@@ -894,14 +894,14 @@ function collectEgress(cmd, depth, out, unk = null) {
         if (unk && repo && hostIsDynamic(repo)) unk.push(`git ${repo.slice(0, 40)}`);
         for (const arg of rest) {
           let hit = false;
-          for (const m of arg.matchAll(URL_RE)) { out.push(m[1]); hit = true; }
+          for (const m of arg.matchAll(URL_RE)) { out.push(m[1]); hit = true; if (dests) dests.push(m[0]); }
           const scp = hit ? null : GIT_SCP_RE.exec(arg);
-          if (scp && !/^[a-z]$/i.test(scp[1])) out.push(scp[1]);   // a one-letter "host" is a Windows drive
+          if (scp && !/^[a-z]$/i.test(scp[1])) { out.push(scp[1]); if (dests) dests.push(arg); }   // a one-letter "host" is a Windows drive
         }
       }
     } else if (URL_ONLY_CLIENTS.has(name)) {
       const dl = DOWNLOADERS[name];
-      const urls = (w) => { let hit = false; for (const m of w.matchAll(URL_RE)) { out.push(m[1]); hit = true; } return hit; };
+      const urls = (w) => { let hit = false; for (const m of w.matchAll(URL_RE)) { out.push(m[1]); hit = true; if (dests) dests.push(m[0]); } return hit; };
       let seen = 0;   // positionals so far
       const bare = !dl.netVerbs || args.some((x) => dl.netVerbs.has(x.toLowerCase()));
       for (let a = 0; a < args.length; a++) {
@@ -918,7 +918,7 @@ function collectEgress(cmd, depth, out, unk = null) {
             if (value && sep < 0) urls(value);
             if (value && unk && hostIsDynamic(value)) unk.push(`${name} ${value.slice(0, 40)}`);
             const h = value ? destHostOf(value) : null;
-            if (h) out.push(h);
+            if (h) { out.push(h); if (dests) dests.push(value); }
           } else if (sep < 0 && dl.values.has(flag) && a + 1 < args.length) urls(args[++a]);
           continue;
         }
@@ -928,7 +928,7 @@ function collectEgress(cmd, depth, out, unk = null) {
         if (!bare) continue;
         if (unk && hostIsDynamic(arg)) unk.push(`${name} ${arg.slice(0, 40)}`);
         const h = destHostOf(arg);
-        if (h) out.push(h);
+        if (h) { out.push(h); if (dests) dests.push(arg); }
       }
     }
   }
@@ -948,6 +948,19 @@ export function shellEgressHosts(command) {
     if (target) collectEgress(target, 0, out);
   }
   return [...new Set(out)];
+}
+
+/** Full destinations (URLs or target arguments) contacted by network clients in a shell command. */
+export function shellEgressDestinations(command) {
+  if (typeof command !== 'string' || !command) return [];
+  const cmd = command.length > 16384 ? command.slice(0, 16384) : command;
+  const outHosts = [];
+  const outDests = [];
+  const spaced = ifsAsSpace(cmd);
+  for (const target of [cmd, resolveVars(cmd), expandBraces(cmd), spaced, spaced && resolveVars(spaced)]) {
+    if (target) collectEgress(target, 0, outHosts, null, outDests);
+  }
+  return [...new Set(outDests)];
 }
 
 /**

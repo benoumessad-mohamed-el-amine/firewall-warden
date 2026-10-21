@@ -1,8 +1,8 @@
 // warden — own your agent security. A guard between an agent and its tools.
 import path from 'node:path';
-import { TIER, ORDER, worst, classify, SHELL, NET, WRITE, shellEgressHosts, shellEgressUnresolved } from './classify.mjs';
+import { TIER, ORDER, worst, classify, SHELL, NET, WRITE, shellEgressHosts, shellEgressDestinations, shellEgressUnresolved } from './classify.mjs';
 import { scanSecrets, injectionHits, obfuscationHits, isExternal, ipScope, safeStringify, asStr, METADATA_RE, PERSISTENCE_PATH_RE } from './scan.mjs';
-import { matchRule, DEFAULT_POLICY, loadPolicy, normalizePolicy, resolveConfig } from './policy.mjs';
+import { matchRule, DEFAULT_POLICY, loadPolicy, normalizePolicy, resolveConfig, checkEgressAllowed } from './policy.mjs';
 import { AuditLog } from './audit.mjs';
 
 export { TIER, AuditLog, classify, loadPolicy, matchRule, resolveConfig };
@@ -112,9 +112,23 @@ export function decide(action, policy = DEFAULT_POLICY, skillText = '') {
       if (PERSISTENCE_PATH_RE.test(dp)) { tier = TIER.BLACK; why.push('☠ persistence target: ' + dp); break; }
     }
   }
-  if (NET.includes(tool) && externalHosts.length && egressAllow.length) {
-    tier = worst(tier, TIER.RED);
-    why.push('⚠ egress to non-allowlisted host(s): ' + externalHosts.join(','));
+  if (NET.includes(tool) && egressAllow.length) {
+    const netDest = action.input?.url || action.input?.uri || action.input?.endpoint || action.input?.target || '';
+    if (netDest) {
+      const eg = checkEgressAllowed(netDest, egressAllow);
+      if (!eg.allowed) {
+        if (eg.pathViolation) {
+          tier = TIER.BLACK;
+          why.push('✗ egress path denied: ' + eg.reason);
+        } else if (eg.host && isExternal(eg.host, egressAllow)) {
+          tier = worst(tier, TIER.RED);
+          why.push('⚠ egress to non-allowlisted host(s): ' + (eg.host || externalHosts.join(',')));
+        }
+      }
+    } else if (externalHosts.length) {
+      tier = worst(tier, TIER.RED);
+      why.push('⚠ egress to non-allowlisted host(s): ' + externalHosts.join(','));
+    }
   }
   // The same allowlist for a shell's network clients: `curl`/`wget` to a host the
   // policy does not list is gated like a fetch to it. Only hosts a client in
@@ -125,10 +139,30 @@ export function decide(action, policy = DEFAULT_POLICY, skillText = '') {
     : '');
   const cmdText = cmdOf(action.input?.command) || cmdOf(action.input?.cmd);
   if (egressAllow.length && cmdText && !WRITE.includes(tool) && !NET.includes(tool)) {
-    const shellHosts = shellEgressHosts(cmdText).filter((h) => isExternal(h, egressAllow));
-    if (shellHosts.length) {
-      tier = worst(tier, TIER.RED);
-      why.push('⚠ shell egress to non-allowlisted host(s): ' + shellHosts.join(','));
+    const shellDests = shellEgressDestinations(cmdText);
+    const unallowedHosts = [];
+    let pathDenied = false;
+    for (const d of shellDests) {
+      const eg = checkEgressAllowed(d, egressAllow);
+      if (!eg.allowed) {
+        if (eg.pathViolation) {
+          tier = TIER.BLACK;
+          why.push('✗ shell egress path denied: ' + eg.reason);
+          pathDenied = true;
+          break;
+        } else if (eg.host && isExternal(eg.host, egressAllow)) {
+          unallowedHosts.push(eg.host);
+        }
+      }
+    }
+    if (!pathDenied) {
+      const shellHosts = shellEgressHosts(cmdText).filter((h) => isExternal(h, egressAllow));
+      for (const h of shellHosts) unallowedHosts.push(h);
+      const uniqueUnallowed = [...new Set(unallowedHosts)];
+      if (uniqueUnallowed.length) {
+        tier = worst(tier, TIER.RED);
+        why.push('⚠ shell egress to non-allowlisted host(s): ' + uniqueUnallowed.join(','));
+      }
     }
     // A network call whose destination is decided at run time cannot be checked
     // against the allowlist, so it is gated the same way.
