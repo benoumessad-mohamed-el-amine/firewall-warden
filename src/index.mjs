@@ -4,8 +4,9 @@ import { TIER, ORDER, worst, classify, SHELL, NET, WRITE, shellEgressHosts, shel
 import { scanSecrets, injectionHits, obfuscationHits, isExternal, ipScope, safeStringify, asStr, METADATA_RE, PERSISTENCE_PATH_RE } from './scan.mjs';
 import { matchRule, DEFAULT_POLICY, loadPolicy, normalizePolicy, resolveConfig, checkEgressAllowed } from './policy.mjs';
 import { AuditLog } from './audit.mjs';
+import { observeResult } from './taint.mjs';
 
-export { TIER, AuditLog, classify, loadPolicy, matchRule, resolveConfig };
+export { TIER, AuditLog, classify, loadPolicy, matchRule, resolveConfig, observeResult };
 
 // Destination-keyed string values of a write action's input (path/dest/target/…).
 // A poisoned write can name its target `dest`/`output`/`to` instead of `path`;
@@ -214,11 +215,31 @@ export function decide(action, policy = DEFAULT_POLICY, skillText = '') {
 }
 
 export const recordVerdict = (audit, action, v) =>
-  audit && audit.record({ ts: new Date().toISOString(), tool: action.tool, input: action.input, tier: v.tier, decision: v.decision, why: v.why });
+  audit && audit.record({
+    ts: new Date().toISOString(),
+    tool: action.tool,
+    input: action.input,
+    tier: v.tier,
+    decision: v.decision,
+    why: v.why,
+    ...(v.taint ? { provenance: v.taint } : {}),
+  });
 
 /** Sync deterministic check (optionally records to an AuditLog). */
-export function check(action, policy = DEFAULT_POLICY, { audit = null, skillText = '' } = {}) {
-  const v = decide(action, policy, skillText);
+export function check(action, policy = DEFAULT_POLICY, { audit = null, skillText = '', session = null } = {}) {
+  let v;
+  if (session && typeof session.check === 'function') {
+    v = session.check(action, skillText);
+  } else {
+    v = decide(action, policy, skillText);
+    if (session && typeof session.isTainted === 'function') {
+      if (session.isTainted()) {
+        v = session.applyTaintedPolicy(action, v);
+      } else {
+        v.taint = session.getTaintState();
+      }
+    }
+  }
   recordVerdict(audit, action, v);
   return v;
 }
@@ -228,8 +249,20 @@ export function check(action, policy = DEFAULT_POLICY, { audit = null, skillText
  * The judge can only ESCALATE risk — a deterministic BLACK is final, and the
  * judge is never asked to bless something the rules already blocked.
  */
-export async function checkAsync(action, policy = DEFAULT_POLICY, { audit = null, skillText = '', judge = null } = {}) {
-  const v = decide(action, policy, skillText);
+export async function checkAsync(action, policy = DEFAULT_POLICY, { audit = null, skillText = '', judge = null, session = null } = {}) {
+  let v;
+  if (session && typeof session.check === 'function') {
+    v = session.check(action, skillText);
+  } else {
+    v = decide(action, policy, skillText);
+    if (session && typeof session.isTainted === 'function') {
+      if (session.isTainted()) {
+        v = session.applyTaintedPolicy(action, v);
+      } else {
+        v.taint = session.getTaintState();
+      }
+    }
+  }
   await applyJudge(action, v, judge);
   recordVerdict(audit, action, v);
   return v;

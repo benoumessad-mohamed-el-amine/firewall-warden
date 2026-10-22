@@ -1,6 +1,6 @@
-// Integration primitives — wrap any agent's tool executor with the firewall.
 import { check, checkAsync } from './index.mjs';
 import { mapMcpToAction } from './mcp.mjs';
+import { observeResult } from './taint.mjs';
 
 export class WardenBlocked extends Error {
   constructor(action, verdict, held = false) {
@@ -26,22 +26,25 @@ export class WardenBlocked extends Error {
  * approve -> onApprove(action, verdict) must resolve truthy, else throws (fail-closed)
  * allow   -> calls execFn(...args)
  */
-export function guardExecutor(execFn, { toAction, policy = {}, audit = null, judge = null, onApprove = null, onBlock = null } = {}) {
+export function guardExecutor(execFn, { toAction, policy = {}, audit = null, judge = null, onApprove = null, onBlock = null, session = null } = {}) {
   const map = toAction || ((a) => a);
   return async function guarded(...args) {
     const action = map(...args);
-    const v = judge ? await checkAsync(action, policy, { audit, judge }) : check(action, policy, { audit });
+    const v = judge ? await checkAsync(action, policy, { audit, judge, session }) : check(action, policy, { audit, session });
     if (v.decision === 'block') { if (onBlock) return onBlock(action, v); throw new WardenBlocked(action, v); }
     if (v.decision === 'approve') {
       const ok = onApprove ? await onApprove(action, v) : false; // fail-closed
       if (!ok) { if (onBlock) return onBlock(action, v); throw new WardenBlocked(action, v, true); }
+      if (session && typeof session.resetProvenance === 'function') session.resetProvenance();
     }
-    return execFn(...args);
+    const res = await execFn(...args);
+    if (session) observeResult(action, res, session);
+    return res;
   };
 }
 
 /** Firewall an Anthropic-SDK tool_use block ({ name, input }). Returns the verdict. */
 export function guardToolUse(toolUse, policy = {}, opts = {}) {
   const action = mapMcpToAction(toolUse.name, toolUse.input || {}, opts.nameMap || {});
-  return check(action, policy, { audit: opts.audit });
+  return check(action, policy, { audit: opts.audit, session: opts.session });
 }

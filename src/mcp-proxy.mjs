@@ -5,7 +5,7 @@
 import { spawn } from 'node:child_process';
 import { check, recordVerdict } from './index.mjs';
 import { mapMcpToAction, scanMcpTools, scanToolResult } from './mcp.mjs';
-import { TaintSession } from './taint.mjs';
+import { TaintSession, observeResult } from './taint.mjs';
 
 const MAX_LINE = 1 << 20; // 1 MiB — a single JSON-RPC frame shouldn't exceed this
 
@@ -40,6 +40,8 @@ export function inspectClientLine(line, state, policy, opts = {}) {
     const name = msg.params?.name;
     const args = msg.params?.arguments || {};
     const action = mapMcpToAction(name, args, opts.nameMap || {});
+    if (!state.pendingCalls) state.pendingCalls = {};
+    state.pendingCalls[msg.id] = action;
     // Cross-call taint: when a per-connection TaintSession is present (one stdio
     // proxy process ≈ one agent session), classify in the context of prior calls
     // on THIS connection, so a split-exfil — secret read into a temp file on
@@ -79,7 +81,9 @@ export function inspectServerLine(line, state, opts = {}) {
       }
     }
   } else if (method === 'tools/call' && msg.result != null) {
+    const action = state.pendingCalls?.[msg.id];
     delete state.pending[msg.id];
+    delete state.pendingCalls?.[msg.id];
     const hits = scanToolResult(msg.result);
     if (hits.length) {
       opts.onWarn?.(`injection in tool result (call #${msg.id}): ${hits.join(', ')}`);
@@ -87,6 +91,9 @@ export function inspectServerLine(line, state, opts = {}) {
         msg.result = { content: [{ type: 'text', text: `⛔ warden neutralized this tool result — prompt-injection detected in the returned content (${hits.join('; ')}).` }], isError: true };
         return { forwardLine: JSON.stringify(msg) };
       }
+    }
+    if (state.taint && action) {
+      observeResult(action, msg.result, state.taint);
     }
   } else if ((method === 'resources/read' || method === 'prompts/get') && msg.result != null) {
     // The other two server→client response types that return attacker-controllable

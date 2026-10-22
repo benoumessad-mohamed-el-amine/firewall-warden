@@ -14,6 +14,37 @@ export interface Action {
   input?: Record<string, unknown>;
 }
 
+export interface ProvenanceSource {
+  match: string;
+  trust: 'untrusted' | 'trusted';
+}
+
+export interface TaintedPolicy {
+  deny?: string[];
+  gate?: string[];
+}
+
+export interface ProvenanceConfig {
+  sources?: ProvenanceSource[];
+  taintedPolicy?: TaintedPolicy;
+  taintDecayCalls?: number | null;
+}
+
+export interface NormalizedProvenance {
+  enabled: boolean;
+  sources: ProvenanceSource[];
+  taintedPolicy: {
+    deny: string[];
+    gate: string[];
+  };
+  taintDecayCalls: number | null;
+}
+
+export interface ProvenanceTaint {
+  tainted: boolean;
+  sources: Array<{ tool: string; seq: number; hash: string }>;
+}
+
 /** Allow/deny rules use Claude-Code-style `tool(glob)` syntax, e.g. `shell(npm run test:*)`. */
 export interface Policy {
   allow?: string[];
@@ -22,6 +53,8 @@ export interface Policy {
   egressAllow?: string[];
   /** Write-path confinement; `null` or absent means unconfined. */
   writeRoots?: string[] | null;
+  /** Context-provenance taint tracking. */
+  provenance?: ProvenanceConfig | boolean;
   [key: string]: unknown;
 }
 
@@ -31,6 +64,7 @@ export interface NormalizedPolicy extends Policy {
   deny: string[];
   egressAllow: string[];
   writeRoots: string[] | null;
+  provenance: NormalizedProvenance | null;
 }
 
 export interface Verdict {
@@ -45,6 +79,8 @@ export interface Verdict {
   gray: boolean;
   /** Set by TaintSession when a cross-call flow raised the verdict. */
   crossCall?: boolean;
+  /** Context-provenance taint state if session tracking is active. */
+  taint?: ProvenanceTaint;
 }
 
 export interface Classification {

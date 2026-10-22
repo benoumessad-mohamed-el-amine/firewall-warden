@@ -4,7 +4,62 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { safeStringify, asStr, canonicalHost } from './scan.mjs';
 
-export const DEFAULT_POLICY = { allow: [], deny: [], egressAllow: [], writeRoots: null };
+export const DEFAULT_POLICY = { allow: [], deny: [], egressAllow: [], writeRoots: null, provenance: null };
+
+export const DEFAULT_UNTRUSTED_SOURCES = [
+  { match: 'fetch(*)', trust: 'untrusted' },
+  { match: 'http(*)', trust: 'untrusted' },
+  { match: 'browser(*)', trust: 'untrusted' },
+  { match: 'puppeteer(*)', trust: 'untrusted' },
+  { match: 'playwright(*)', trust: 'untrusted' },
+  { match: 'web_search(*)', trust: 'untrusted' },
+  { match: 'search_web(*)', trust: 'untrusted' },
+  { match: 'read_url_content(*)', trust: 'untrusted' },
+  { match: '*issue*(*)', trust: 'untrusted' },
+  { match: '*pull_request*(*)', trust: 'untrusted' },
+  { match: '*comment*(*)', trust: 'untrusted' },
+  { match: '*mail*(*)', trust: 'untrusted' },
+  { match: '*email*(*)', trust: 'untrusted' },
+];
+
+export const DEFAULT_TAINTED_POLICY = {
+  deny: [
+    'fetch(*"POST"*)',
+    'fetch(*"PUT"*)',
+    'fetch(*"PATCH"*)',
+    'http(*"POST"*)',
+    'http(*"PUT"*)',
+    'http(*"PATCH"*)',
+    'shell(*git push*)',
+    'shell(*mail *)',
+    'shell(*sendmail*)',
+    'shell(*gist*)',
+    '*gist*(*)',
+    '*paste*(*)',
+    '*send*mail*(*)',
+    '*upload*(*)',
+  ],
+  gate: [
+    'shell(*)',
+    'read_file(*.env*)',
+    'read_file(*id_rsa*)',
+    'read_file(*credentials*)',
+  ],
+};
+
+export function normalizeProvenance(prov) {
+  if (!prov) return null;
+  const p = typeof prov === 'object' ? prov : {};
+  return {
+    enabled: true,
+    sources: Array.isArray(p.sources) && p.sources.length ? p.sources : [...DEFAULT_UNTRUSTED_SOURCES],
+    taintedPolicy: {
+      deny: Array.isArray(p.taintedPolicy?.deny) ? p.taintedPolicy.deny : [...DEFAULT_TAINTED_POLICY.deny],
+      gate: Array.isArray(p.taintedPolicy?.gate) ? p.taintedPolicy.gate : [...DEFAULT_TAINTED_POLICY.gate],
+    },
+    taintDecayCalls: typeof p.taintDecayCalls === 'number' && p.taintDecayCalls >= 0 ? p.taintDecayCalls : null,
+  };
+}
 
 // The project policy file was `warden.config.json` before the rename. A fresh
 // `redstamp init` now writes `redstamp.config.json`, but an existing
@@ -54,10 +109,17 @@ function globMatch(pattern, text) {
 
 /** Does an action match a rule like `shell(npm run test:*)` / `write(src/**)` / `fetch(api.github.com)`? */
 export function matchRule(rule, action) {
-  const m = /^(\w+)\((.*)\)$/.exec(rule);
+  const m = /^([^()]+)\((.*)\)$/.exec(rule);
   if (!m) return false;
   const [, t, pat] = m;
-  if (t.toLowerCase() !== asStr((action && action.tool) || '').toLowerCase()) return false;
+  const toolName = asStr((action && action.tool) || '').toLowerCase();
+  const ruleTool = t.toLowerCase();
+  if (ruleTool.includes('*')) {
+    if (!globMatch(ruleTool, toolName)) return false;
+  } else if (ruleTool !== toolName) {
+    return false;
+  }
+  if (pat === '*') return true;
   const i = (action && action.input) || {};
   const subject = i.command || i.path || i.url || i;
   // Coerce safely: a string is itself; an array (split command) joins via
@@ -67,7 +129,12 @@ export function matchRule(rule, action) {
   const text = typeof subject === 'string' ? subject
     : Array.isArray(subject) ? subject.map(String).join(' ')
     : safeStringify(subject);
-  return globMatch(pat, text);
+  if (globMatch(pat, text)) return true;
+  if (typeof subject === 'string') {
+    const fullText = safeStringify(i);
+    if (globMatch(pat, fullText)) return true;
+  }
+  return false;
 }
 
 // Coerce a rule list to an array: a scalar/object (e.g. a `.warden.json` with
@@ -95,6 +162,7 @@ export function normalizePolicy(policy) {
     deny: asRules(p.deny),
     egressAllow: asRules(p.egressAllow),
     writeRoots: Array.isArray(p.writeRoots) ? p.writeRoots : null,
+    provenance: normalizeProvenance(p.provenance),
   };
 }
 

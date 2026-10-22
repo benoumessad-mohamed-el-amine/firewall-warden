@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+### Added: path-level egress confinement (U5)
+
+- `egressAllow` entries now support path globs (e.g. `api.github.com/repos/ORG/*`).
+  Entries without a path retain existing host-only semantics.
+- Non-regex linear-time segment matcher supporting `*` (single segment) and `**`
+  (zero or more segments), safe from catastrophic backtracking and ReDoS.
+- Fail-closed enforcement: when any path rule exists for a host, requests to that
+  host matching no path rule are denied.
+- URL destination normalization rejecting userinfo spoofing, handling non-default
+  ports, resolving relative traversals (`.` / `..`), and decoding percent-encoded
+  path segments once.
+
+### Added: context-provenance taint tracking (U1)
+
+- Added `provenance` configuration block with `sources`, `taintedPolicy`, and
+  `taintDecayCalls` (defaulting to null / never decaying unless configured).
+- Added `observeResult(call, result, session)` API storing only execution metadata
+  and a SHA-256 content hash: `{ tainted, sources: [{tool, seq, hash}] }`.
+  Result content is never retained in memory.
+- Wired into MCP stdio proxy (`inspectServerLine`), `guardExecutor`, and library API.
+- Tainted session policy enforcement restricts outbound writes (POST/PUT, git push,
+  gist/paste upload) to blocked and gates secret-file reads and shell access.
+- Audit trail compatibility: optional `provenance` field on chained audit entries
+  preserving hash-chain verification across versions.
+
 ## [0.9.0] - 2026-10-15
 
 ### Fixed: heredocs that execute

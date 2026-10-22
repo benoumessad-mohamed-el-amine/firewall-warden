@@ -28,6 +28,8 @@ export interface CheckOptions {
   audit?: AuditSink | null;
   /** Skill or tool-description text to scan for poisoning alongside the call. */
   skillText?: string;
+  /** Agent session for context-provenance taint tracking. */
+  session?: unknown | null;
 }
 
 /** Synchronous deterministic check, optionally recorded to an audit sink. */
@@ -42,4 +44,7 @@ export declare function checkAsync(action: Action, policy?: Policy, opts?: Check
 
 /** Apply a judge to a verdict in place (escalate-only). Returns the same verdict object. */
 export declare function applyJudge(action: Action, v: Verdict, judge: Judge | null | undefined): Promise<Verdict>;
+
+/** Observe a tool result in an agent session, marking the session tainted if from an untrusted source. */
+export declare function observeResult(call: Action, result: unknown, session: unknown): unknown;
 
