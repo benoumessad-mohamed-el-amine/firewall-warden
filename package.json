@@ -43,10 +43,6 @@
   },
   "types": "./src/index.d.mts",
   "bin": {
-    "redstamp": "src/cli.mjs",
-    "redstamp-mcp": "src/mcp-proxy-cli.mjs",
-    "redstamp-hook": "src/cc-hook.mjs",
-    "redstamp-serve": "src/daemon-cli.mjs",
     "warden": "src/cli.mjs",
     "warden-mcp": "src/mcp-proxy-cli.mjs",
     "warden-hook": "src/cc-hook.mjs",

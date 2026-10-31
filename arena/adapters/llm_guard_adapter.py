@@ -10,7 +10,7 @@
 # semantics like `rm -rf /` — screening that is simply not what it does. That is
 # a cross-layer map, not a loss: the two are complementary layers, and the
 # per-family breakdown in results.json shows exactly where each one lives.
-# Reporting its low shell recall as a "win" for redstamp would be the strawman
+# Reporting its low shell recall as a "win" for warden would be the strawman
 # the arena README exists to prevent.
 #
 # Scanners: the two documented INPUT scanners that need no operator-written

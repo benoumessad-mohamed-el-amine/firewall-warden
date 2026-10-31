@@ -1,7 +1,7 @@
 {
-  "name": "@askalf/redstamp",
+  "name": "@askalf/warden",
   "version": "0.0.3",
-  "description": "POINTER PACKAGE — redstamp is not distributed on npm. Install the Sigstore-signed release from https://github.com/askalf/redstamp/releases. A deterministic firewall for AI agent tool calls (Own Your Stack).",
+  "description": "POINTER PACKAGE — warden is not distributed on npm. Install the Sigstore-signed release from https://github.com/askalf/warden/releases. A deterministic firewall for AI agent tool calls (Own Your Stack).",
   "keywords": [
     "agent",
     "security",
@@ -12,13 +12,13 @@
     "firewall",
     "own-your-stack"
   ],
-  "homepage": "https://github.com/askalf/redstamp#readme",
+  "homepage": "https://github.com/askalf/warden#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/askalf/redstamp.git"
+    "url": "git+https://github.com/askalf/warden.git"
   },
   "bugs": {
-    "url": "https://github.com/askalf/redstamp/issues"
+    "url": "https://github.com/askalf/warden/issues"
   },
   "license": "MIT",
   "author": "askalf",

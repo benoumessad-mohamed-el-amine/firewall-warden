@@ -1,6 +1,6 @@
 # Third-party corpus results
 
-> redstamp scored against corpora **nobody here wrote** — the neutrality test the arena README calls for. Precision on external benign commands, recall on external attacks, reported straight. Regenerate: `node arena/thirdparty.mjs`.
+> warden scored against corpora **nobody here wrote** — the neutrality test the arena README calls for. Precision on external benign commands, recall on external attacks, reported straight. Regenerate: `node arena/thirdparty.mjs`.
 
 ## tldr-pages — benign precision (CC-BY-4.0)
 
@@ -15,21 +15,21 @@ A large external benign set with zero hard false-positives is the number that ma
 
 Source: 203 commands from [Atomic Red Team](https://github.com/redcanaryco/atomic-red-team) @ `2c63affb3b` across 45 ATT&CK techniques. Labels assigned by security principle per technique (not "it's in Atomic → block"); see the corpus provenance for the full methodology.
 
-**Read this axis-aware.** redstamp classifies command *semantics*. Atomic Red Team also ships tests that run a pre-staged binary (`mimikatz.exe`, `gsecdump.exe`) — whose maliciousness is in the binary's reputation, not the command string. No command-string firewall can catch those without a binary-reputation feed; they are a documented axis limit, exactly as LlamaFirewall is read on the injection slice only. Each sample is tagged `command-semantic` vs `opaque-binary`.
+**Read this axis-aware.** warden classifies command *semantics*. Atomic Red Team also ships tests that run a pre-staged binary (`mimikatz.exe`, `gsecdump.exe`) — whose maliciousness is in the binary's reputation, not the command string. No command-string firewall can catch those without a binary-reputation feed; they are a documented axis limit, exactly as LlamaFirewall is read on the injection slice only. Each sample is tagged `command-semantic` vs `opaque-binary`.
 
 | slice | metric | result |
 |---|---|---|
-| block · command-semantic (redstamp's axis) | hard-block recall | **21/26 (81%)** |
+| block · command-semantic (warden's axis) | hard-block recall | **21/26 (81%)** |
 | block · command-semantic | +gate recall (block or escalate) | 26/26 (100%) |
 | block · opaque-binary (out of axis) | hard-block recall | 6/39 (15%) — documented limit |
 | approve · dual-use | escalated (block or gate) | 16/66 (24%) |
 | allow · discovery | **precision** (0 FP = perfect) | **0 FP / 72** (100%), 4 gated |
 
-_On the dual-use row: this corpus labels every dual-use technique `approve`, the conservative position that a human should see them, so 50 of 66 sit below redstamp's escalation threshold (archiving, clipboard/screen reads, registry edits, permission changes, plain file transfers). That is the friction dial, not a miss: gating all of them would put a prompt in front of routine work, and the arena reports it plainly rather than tuning the labels to flatter the score._
+_On the dual-use row: this corpus labels every dual-use technique `approve`, the conservative position that a human should see them, so 50 of 66 sit below warden's escalation threshold (archiving, clipboard/screen reads, registry edits, permission changes, plain file transfers). That is the friction dial, not a miss: gating all of them would put a prompt in front of routine work, and the arena reports it plainly rather than tuning the labels to flatter the score._
 
 **Honest read.** Nothing on-axis is silently allowed: **26/26** of the external ATT&CK attacks are stopped — 21 hard-blocked and 5 escalated for human review — at **100%** precision on benign discovery from the same source (0 false-positives of 72).
 
-This is what the corpus was imported for. The first run scored **10/31 hard-block and 13/31 prevented**, with 18 attacks silently allowed — an outside ATT&CK corpus catching real command-semantic gaps redstamp's own corpus never exercised: exfil over ssh/tar and DNS, inhibit-recovery variants (`wbadmin delete catalog`, WMI shadow-copy delete, `fsutil usn deletejournal`), ransomware-shaped encryption of system credential files, `dd` overwriting a logfile, the `kubectl` privileged-pod host escape, and credential-store enumeration. Those became detection rules (each with a regression test **and** a paired false-positive guard, since every one is a co-occurrence rule), and the numbers above are post-fix.
+This is what the corpus was imported for. The first run scored **10/31 hard-block and 13/31 prevented**, with 18 attacks silently allowed — an outside ATT&CK corpus catching real command-semantic gaps warden's own corpus never exercised: exfil over ssh/tar and DNS, inhibit-recovery variants (`wbadmin delete catalog`, WMI shadow-copy delete, `fsutil usn deletejournal`), ransomware-shaped encryption of system credential files, `dd` overwriting a logfile, the `kubectl` privileged-pod host escape, and credential-store enumeration. Those became detection rules (each with a regression test **and** a paired false-positive guard, since every one is a co-occurrence rule), and the numbers above are post-fix.
 
 ### Remaining boundary
 
@@ -40,4 +40,4 @@ Nothing on-axis is silently allowed. The residue is the **opaque-binary** slice 
 - **tldr-pages** — CC-BY-4.0. © tldr-pages team and contributors, licensed CC-BY-4.0. Commands extracted from pages/common and placeholder-substituted; this is a derived subset, not the original pages.
 - **Atomic Red Team** — MIT. Atomic Red Team™ by Red Canary, MIT License. Command strings extracted from atomics/<technique>/<technique>.yaml executor blocks with input-argument defaults substituted; this is a derived subset.
 
-See [THIRD-PARTY-CORPORA.md](THIRD-PARTY-CORPORA.md) for the full license map (including corpora we deliberately did NOT vendor for license reasons) and the import roadmap. MIT for redstamp's own code and tooling.
+See [THIRD-PARTY-CORPORA.md](THIRD-PARTY-CORPORA.md) for the full license map (including corpora we deliberately did NOT vendor for license reasons) and the import roadmap. MIT for warden's own code and tooling.

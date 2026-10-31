@@ -15,7 +15,7 @@ export declare function loadPolicy(path: string): NormalizedPolicy;
 /** Does `rule` (e.g. `shell(npm run test:*)`, `write(src/*)`) match this action? */
 export declare function matchRule(rule: string, action: Action): boolean;
 
-/** Resolve the project config path: an explicit path, else `redstamp.config.json`, else a legacy `warden.config.json`. */
+/** Resolve the project config path: an explicit path, else `warden.config.json`, else a legacy `warden.config.json`. */
 export declare function resolveConfig(explicit?: string | null, dir?: string): string;
 
 /** Deterministic verdict for an action. No I/O, no LLM: pure and offline. */

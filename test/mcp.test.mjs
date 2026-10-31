@@ -47,7 +47,7 @@ test('scanMcpTools severity: instructions are critical, bare capability mentions
 test('scanMcpTools FP classes from the marketplace audit stay out of critical', () => {
   const scan1 = (tool) => scanMcpTools([tool])[0];
   // 1) everyday-engineering 'leak' / defensive threat lists → 'exfiltration intent'
-  //    Since redstamp#75 the bare word alone no longer raises the flag at all:
+  //    Since warden#75 the bare word alone no longer raises the flag at all:
   //    it needs an object worth taking or a destination in the same clause. This
   //    line has neither, so it is now CLEAN rather than advisory-with-a-flag.
   //    Advisory was not enough — any co-occurring flag lifts a finding to

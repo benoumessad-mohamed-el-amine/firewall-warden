@@ -1,4 +1,4 @@
-// Shared type definitions for redstamp's public API. Hand-written to mirror the
+// Shared type definitions for warden's public API. Hand-written to mirror the
 // runtime shapes in the .mjs sources; `test/types.test.mjs` keeps the export
 // lists in sync.
 
@@ -8,7 +8,7 @@ export type Tier = 'green' | 'yellow' | 'red' | 'black';
 /** What the caller should do: run it, ask a human, or refuse. */
 export type Decision = 'allow' | 'approve' | 'block';
 
-/** A tool call in redstamp's normalized shape. `tool` is matched case-insensitively. */
+/** A tool call in warden's normalized shape. `tool` is matched case-insensitively. */
 export interface Action {
   tool: string;
   input?: Record<string, unknown>;

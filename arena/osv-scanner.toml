@@ -1,8 +1,8 @@
 # Suppression scoped to arena/requirements-llm-guard.txt only.
 #
-# redstamp's own supply chain is not affected by anything below: none of these
+# warden's own supply chain is not affected by anything below: none of these
 # packages ship in the npm package (package.json files: ["src"]) and none are
-# reachable from redstamp code. They are the pinned dependency closure of a
+# reachable from warden code. They are the pinned dependency closure of a
 # COMPETITOR the arena scores — LLM Guard 0.3.16 — installed only inside the
 # arena job on a throwaway runner.
 #

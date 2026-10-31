@@ -60,7 +60,7 @@
       "id": "LLM03",
       "name": "Supply Chain",
       "verdict": "partial",
-      "reason": "Catches supply-chain-shaped RCE (git ext::/hooks) and poisoned-skill text; full dependency/provenance pinning is redstamp's sibling truecopy, not this classifier.",
+      "reason": "Catches supply-chain-shaped RCE (git ext::/hooks) and poisoned-skill text; full dependency/provenance pinning is warden's sibling truecopy, not this classifier.",
       "families": [
         "git-rce"
       ],
@@ -86,7 +86,7 @@
       "id": "LLM05",
       "name": "Improper Output Handling",
       "verdict": "covered",
-      "reason": "The LLM's output IS the tool call — redstamp validates and blocks the downstream action, and neutralises injected tool-result output.",
+      "reason": "The LLM's output IS the tool call — warden validates and blocks the downstream action, and neutralises injected tool-result output.",
       "families": [
         "rce-download",
         "rce-pipe",
@@ -147,7 +147,7 @@
       "id": "LLM08",
       "name": "Vector and Embedding Weaknesses",
       "verdict": "out",
-      "reason": "RAG / vector-store / embedding weaknesses are a different layer; redstamp does not inspect retrieval.",
+      "reason": "RAG / vector-store / embedding weaknesses are a different layer; warden does not inspect retrieval.",
       "families": [],
       "measured": {
         "tot": 0,
@@ -171,7 +171,7 @@
       "id": "LLM10",
       "name": "Unbounded Consumption",
       "verdict": "partial",
-      "reason": "Escalates some resource-heavy infra actions, but redstamp is not a rate/cost limiter — unbounded consumption is only partially addressed.",
+      "reason": "Escalates some resource-heavy infra actions, but warden is not a rate/cost limiter — unbounded consumption is only partially addressed.",
       "families": [
         "risky-infra"
       ],
@@ -285,7 +285,7 @@
       "id": "T7",
       "name": "Misaligned & Deceptive Behaviors",
       "verdict": "out",
-      "reason": "Deceptive-behavior detection needs trajectory/goal modelling redstamp does not do.",
+      "reason": "Deceptive-behavior detection needs trajectory/goal modelling warden does not do.",
       "families": [],
       "measured": {
         "tot": 0,

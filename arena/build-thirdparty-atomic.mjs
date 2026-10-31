@@ -5,12 +5,12 @@
 // Why this is the credibility anchor: Atomic Red Team is the industry-standard
 // adversary-emulation library — real, ATT&CK-mapped attack commands that
 // red/blue teams actually run, written by Red Canary and hundreds of
-// contributors, NOT by anyone here. If redstamp catches these, it catches the
+// contributors, NOT by anyone here. If warden catches these, it catches the
 // same techniques the major security products benchmark against.
 //
 // LICENSE: Atomic Red Team is MIT. We vendor a normalized, derived subset of the
 // `executor.command` strings with attribution (see NOTICE below and
-// arena/THIRD-PARTY-CORPORA.md). Clean to combine with redstamp's MIT code.
+// arena/THIRD-PARTY-CORPORA.md). Clean to combine with warden's MIT code.
 //
 // HONEST LABELING — the hard, important part. Atomic Red Team spans every ATT&CK
 // tactic, INCLUDING Discovery (whoami, systeminfo, ls). A firewall that blocks
@@ -135,7 +135,7 @@ const TECHNIQUE_VERDICT = {
 //
 // The discipline that keeps this honest: an override is only justified when the
 // command itself is genuinely not what the technique implies — NEVER because
-// redstamp happens to miss it. Both entries below are commands no correct
+// warden happens to miss it. Both entries below are commands no correct
 // firewall should hard-block, and both remain in the corpus (relabeled), not
 // deleted.
 const SAMPLE_OVERRIDES = [
@@ -265,7 +265,7 @@ async function main() {
       license: 'MIT',
       attribution: 'Atomic Red Team™ by Red Canary, MIT License. Command strings extracted from atomics/<technique>/<technique>.yaml executor blocks with input-argument defaults substituted; this is a derived subset.',
     },
-    provenance: `THIRD-PARTY corpus — ${samples.length} real ATT&CK attack/benign commands from Atomic Red Team @ ${sha.slice(0, 10)} (MIT), across ${families.length} techniques. Nobody at askalf wrote these. Labels assigned by SECURITY PRINCIPLE per ATT&CK technique (block=execution/impact/exfil/persistence/cred/evasion/C2, approve=dual-use, allow=discovery), NOT by "it's in Atomic Red Team". Only techniques with a principled verdict are imported; ${missing} had no base YAML, ${skippedUnresolved} test commands were dropped for unresolved placeholders, and ${mislabeledDropped} commands in allow/approve techniques were dropped because they were actually RCE download-cradles (not benign — they belong in no benign set), and ${overridden} samples carry a documented per-sample label correction (see the sample's \`relabeled\` field, and SAMPLE_OVERRIDES in the builder) where the technique-level verdict did not fit the specific command. The allow set (discovery) is a genuine precision test from the same source as the attacks. Each sample carries an \`axis\` tag: 'command-semantic' (redstamp's axis) vs 'opaque-binary' (running a pre-staged .exe/.dll — out of a command-string firewall's reach, a documented limit, not a miss).`,
+    provenance: `THIRD-PARTY corpus — ${samples.length} real ATT&CK attack/benign commands from Atomic Red Team @ ${sha.slice(0, 10)} (MIT), across ${families.length} techniques. Nobody at askalf wrote these. Labels assigned by SECURITY PRINCIPLE per ATT&CK technique (block=execution/impact/exfil/persistence/cred/evasion/C2, approve=dual-use, allow=discovery), NOT by "it's in Atomic Red Team". Only techniques with a principled verdict are imported; ${missing} had no base YAML, ${skippedUnresolved} test commands were dropped for unresolved placeholders, and ${mislabeledDropped} commands in allow/approve techniques were dropped because they were actually RCE download-cradles (not benign — they belong in no benign set), and ${overridden} samples carry a documented per-sample label correction (see the sample's \`relabeled\` field, and SAMPLE_OVERRIDES in the builder) where the technique-level verdict did not fit the specific command. The allow set (discovery) is a genuine precision test from the same source as the attacks. Each sample carries an \`axis\` tag: 'command-semantic' (warden's axis) vs 'opaque-binary' (running a pre-staged .exe/.dll — out of a command-string firewall's reach, a documented limit, not a miss).`,
     total: samples.length,
     families,
     counts,

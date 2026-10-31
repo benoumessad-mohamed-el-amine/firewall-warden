@@ -213,7 +213,7 @@ export const scanTextOf = (tool) => safeStringify(tool).replace(/\\r\\n|\\n|\\r/
  * identifier while every published hit offset into `text` stays exact. A tool
  * NAME is an identifier, not prose — it cannot carry an instruction, so matching
  * intent patterns (exfiltrate/leak/steal, instruction-override, jailbreak
- * personas, …) against it is pure noise (redstamp#90: `memory-leak-debugging`
+ * personas, …) against it is pure noise (warden#90: `memory-leak-debugging`
  * flagged 'exfiltration intent' on the `leak` in its own name).
  *
  * Fails OPEN — returns `text` unchanged when the name can't be located (absent,
@@ -247,7 +247,7 @@ export function scanMcpTools(tools = []) {
     const text = scanTextOf(t);
     // Narrative-intent patterns scan the tool MINUS its name: a name is an
     // identifier, not prose, so an injection/exfil/jailbreak match inside it is
-    // noise (redstamp#90 — `memory-leak-debugging` tripped 'exfiltration intent'
+    // noise (warden#90 — `memory-leak-debugging` tripped 'exfiltration intent'
     // on the `leak` in its own name). blankNameValue spaces out the name value at
     // the SAME length, so hit offsets into `text` stay exact. The structural
     // MENTION scans (sensitive-path / secret-env, below) still read the whole

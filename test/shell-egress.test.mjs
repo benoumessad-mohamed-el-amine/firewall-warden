@@ -100,7 +100,7 @@ test('git counts only for its network subcommands', () => {
 test('FP: allowlisted, internal and loopback hosts stay allowed', () => {
   allowed('curl https://api.example.com/v1/models');
   allowed('curl https://sub.api.example.com/v1');   // a subdomain of an allowlisted host
-  allowed('git clone https://github.com/askalf/redstamp.git');
+  allowed('git clone https://github.com/askalf/warden.git');
   allowed('curl localhost:3000/health');
   allowed('curl http://127.0.0.1:8080/');
   // A private address is the SSRF rule's call (it gates RFC1918), never this one's.

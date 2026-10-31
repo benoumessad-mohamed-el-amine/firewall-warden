@@ -1,8 +1,8 @@
 # Why deterministic
 
-Autonomous agents are a machine for turning your bank balance — and your blast radius — into tool calls. OpenClaw became 2026's first big AI security disaster: a one-click RCE ([CVE-2026-25253](https://nvd.nist.gov/vuln/detail/CVE-2026-25253), CVSS 8.8 — a `gatewayUrl` query parameter auto-opened a WebSocket and leaked the auth token), a poisoned skills marketplace (the **ClawHavoc** campaign: 341 malicious skills, mostly credential stealers), and [135,000+ instances exposed across 82 countries](https://securityscorecard.com/) with no auth. **redstamp is the layer built to stop that class of failure.**
+Autonomous agents are a machine for turning your bank balance — and your blast radius — into tool calls. OpenClaw became 2026's first big AI security disaster: a one-click RCE ([CVE-2026-25253](https://nvd.nist.gov/vuln/detail/CVE-2026-25253), CVSS 8.8 — a `gatewayUrl` query parameter auto-opened a WebSocket and leaked the auth token), a poisoned skills marketplace (the **ClawHavoc** campaign: 341 malicious skills, mostly credential stealers), and [135,000+ instances exposed across 82 countries](https://securityscorecard.com/) with no auth. **warden is the layer built to stop that class of failure.**
 
-redstamp isn't an AI — it's a firewall that *guards* AIs. That's deliberate:
+warden isn't an AI — it's a firewall that *guards* AIs. That's deliberate:
 
 - A **probabilistic** (LLM-based) guard can be prompt-injected by the very content it's screening, never answers the same way twice, and can't be regression-tested.
 - A **deterministic** guard is reproducible, auditable, and testable: same call, same verdict, offline, in microseconds.
@@ -19,5 +19,5 @@ Behind the arena: **the full test suite, all passing in CI**, three adversarial 
 npm run demo    # feeds it OpenClaw-class attacks + benign ops
 npm test        # node --test
 npm run bench   # the 298-sample corpus, per-family scores
-npm run arena   # score redstamp against the rival adapters
+npm run arena   # score warden against the rival adapters
 ```

@@ -31,7 +31,7 @@ export const SECRET_ENV_RE = /\$\{?[A-Z0-9_]*(?:KEY|TOKEN|SECRET|PASSWORD|CREDEN
 // that un-escapes only newlines, so a source `"` survives as backslash-quote.
 // A quoted token — `--cluster_endpoint "host.on.aws" now` becomes `...on.aws\"
 // now` — lets a naive separator class eat that escape backslash, flagging every
-// quoted hostname or list literal in prose (redstamp#86). Guarding the backslash
+// quoted hostname or list literal in prose (warden#86). Guarding the backslash
 // with `(?!")` drops that artifact; a genuine Windows separator is JSON-doubled
 // to `\\` (first backslash is followed by the second, not `"`, so it still
 // matches). The forward slash gets NO guard: a real trailing-slash dir at the

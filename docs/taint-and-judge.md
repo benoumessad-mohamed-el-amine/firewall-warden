@@ -7,7 +7,7 @@
 `TaintSession` remembers the session — secret **sources** (`~/.ssh`, `.env`, `.aws/credentials`, …), **propagation** (the file a secret lands in, and any copy of it, becomes tainted), and external **sinks**:
 
 ```js
-import { TaintSession } from '@askalf/redstamp/taint';
+import { TaintSession } from '@askalf/warden/taint';
 
 const s = new TaintSession(policy);
 s.check({ tool: 'shell', input: { command: 'cat ~/.ssh/id_rsa > /tmp/stage' } }); // approve — sensitive read
@@ -21,8 +21,8 @@ Still deterministic and offline. Like the judge, it can only **raise** risk — 
 ## Optional LLM judge
 
 ```js
-import { checkAsync } from '@askalf/redstamp';
-import { makeJudge } from '@askalf/redstamp/judge';
+import { checkAsync } from '@askalf/warden';
+import { makeJudge } from '@askalf/warden/judge';
 
 const judge = makeJudge({ endpoint: 'https://api.anthropic.com' }); // or your own Anthropic-compatible gateway
 const v = await checkAsync(action, policy, { judge });

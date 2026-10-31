@@ -1,23 +1,23 @@
-// Framework coverage matrix — map redstamp's detection families onto the
+// Framework coverage matrix — map warden's detection families onto the
 // security frameworks buyers, auditors, and reviewers actually speak, then back
 // every coverage claim with a MEASURED number from the arena corpus.
 //
 // Why this exists: "we catch attacks" is anecdote until it's expressed in a
-// shared vocabulary and tied to evidence. This file maps each of redstamp's
+// shared vocabulary and tied to evidence. This file maps each of warden's
 // non-benign detection families to:
 //   - OWASP Top 10 for LLM Applications (2025)
 //   - OWASP Agentic AI — Threats & Mitigations (T1–T15)
 //   - MITRE ATT&CK (Enterprise) — the TTP each family realises
 //   - MITRE ATLAS — the LLM-specific adversarial-ML techniques
 //   - NIST AI RMF — the function each detection serves
-// then loads arena/corpus.json, runs redstamp's own `decide()` over it, and
+// then loads arena/corpus.json, runs warden's own `decide()` over it, and
 // prints, per framework item: is it in scope, which families cover it, and the
 // measured block+gate recall on those families' malicious/risky samples.
 //
-// HONESTY IS THE POINT. redstamp is a tool-call action firewall + secret-exfil
+// HONESTY IS THE POINT. warden is a tool-call action firewall + secret-exfil
 // + injection scanner + tamper-evident audit. It is NOT a RAG/embedding guard,
 // a training-data-poisoning defense, a misinformation classifier, or a rate
-// limiter — and the matrix says so, out loud, per row. A framework row redstamp
+// limiter — and the matrix says so, out loud, per row. A framework row warden
 // does not address is marked `out` with a one-line reason, never quietly
 // dropped. Over-claiming coverage on a security tool is the failure mode this
 // file is built to prevent.
@@ -211,14 +211,14 @@ const CONTROL_NOTES = {
 export const OWASP_LLM_VERDICT = {
   LLM01: ['covered', 'Screens prompt-injection text in untrusted skill/tool descriptions and tool results; neutralises injected instructions before they reach the agent.'],
   LLM02: ['covered', 'Blocks credential/secret egress and cloud-metadata SSRF; flags secret reads.'],
-  LLM03: ['partial', 'Catches supply-chain-shaped RCE (git ext::/hooks) and poisoned-skill text; full dependency/provenance pinning is redstamp\'s sibling truecopy, not this classifier.'],
+  LLM03: ['partial', 'Catches supply-chain-shaped RCE (git ext::/hooks) and poisoned-skill text; full dependency/provenance pinning is warden\'s sibling truecopy, not this classifier.'],
   LLM04: ['out', 'Training-data / model poisoning is out of scope for a runtime tool-call firewall (runtime instruction-poisoning is covered under LLM01).'],
-  LLM05: ['covered', 'The LLM\'s output IS the tool call — redstamp validates and blocks the downstream action, and neutralises injected tool-result output.'],
+  LLM05: ['covered', 'The LLM\'s output IS the tool call — warden validates and blocks the downstream action, and neutralises injected tool-result output.'],
   LLM06: ['covered', 'Core thesis: constrains agent agency by blocking destructive, persistence, privilege, and defense-evasion actions and escalating dual-use ones.'],
   LLM07: ['partial', 'Does not protect system-prompt text itself, but blocks egress of the secrets a leaked prompt would try to carry (via LLM02 families).'],
-  LLM08: ['out', 'RAG / vector-store / embedding weaknesses are a different layer; redstamp does not inspect retrieval.'],
+  LLM08: ['out', 'RAG / vector-store / embedding weaknesses are a different layer; warden does not inspect retrieval.'],
   LLM09: ['out', 'Misinformation / hallucination content is not a tool-call action; out of scope.'],
-  LLM10: ['partial', 'Escalates some resource-heavy infra actions, but redstamp is not a rate/cost limiter — unbounded consumption is only partially addressed.'],
+  LLM10: ['partial', 'Escalates some resource-heavy infra actions, but warden is not a rate/cost limiter — unbounded consumption is only partially addressed.'],
 };
 
 export const OWASP_AGENTIC_VERDICT = {
@@ -228,7 +228,7 @@ export const OWASP_AGENTIC_VERDICT = {
   T4: ['partial', 'Blocks destructive availability attacks; not a resource/rate limiter for compute overload.'],
   T5: ['out', 'Cascading hallucination is a reasoning-chain failure, not a tool-call action.'],
   T6: ['partial', 'Indirect injection that redirects intent is screened at the injected-text and resulting-action level.'],
-  T7: ['out', 'Deceptive-behavior detection needs trajectory/goal modelling redstamp does not do.'],
+  T7: ['out', 'Deceptive-behavior detection needs trajectory/goal modelling warden does not do.'],
   T8: ['covered', CONTROL_NOTES.T8],
   T9: ['out', 'Agent identity/impersonation is an auth-layer concern, out of scope.'],
   T10: ['partial', 'Deterministic verdicts and an approve tier reduce human-review flooding, but the escalation-volume design is the operator\'s.'],
@@ -277,7 +277,7 @@ const familiesFor = (kind, id) => Object.entries(FAMILY)
 
 function frameworkSection(title, items, verdictMap, kind, perFamily, opts = {}) {
   const lines = [`## ${title}`, '', opts.blurb || '', '',
-    '| # | risk | redstamp | families | measured prevent-recall |',
+    '| # | risk | warden | families | measured prevent-recall |',
     '|---|---|---|---|---|'];
   let covered = 0, partial = 0;
   const rows = [];
@@ -310,11 +310,11 @@ export function build() {
 
   const llmSec = frameworkSection(
     'OWASP Top 10 for LLM Applications (2025)', OWASP_LLM, OWASP_LLM_VERDICT, 'llm', perFamily,
-    { blurb: 'The reference risk list for LLM apps. redstamp is a tool-call firewall, so it lands squarely on the action-and-output risks (LLM05/LLM06) and the data-egress risks (LLM01/LLM02) — and is explicit about the retrieval/model/misinformation risks it does not address.' },
+    { blurb: 'The reference risk list for LLM apps. warden is a tool-call firewall, so it lands squarely on the action-and-output risks (LLM05/LLM06) and the data-egress risks (LLM01/LLM02) — and is explicit about the retrieval/model/misinformation risks it does not address.' },
   );
   const agenticSec = frameworkSection(
     'OWASP Agentic AI — Threats & Mitigations (T1–T15)', OWASP_AGENTIC, OWASP_AGENTIC_VERDICT, 'agentic', perFamily,
-    { blurb: 'The agent-specific threat catalogue. redstamp\'s home is Tool Misuse (T2), Privilege Compromise (T3), and Unexpected RCE (T11), plus Repudiation (T8) via its tamper-evident audit — with the multi-agent and social threats out of scope by design.' },
+    { blurb: 'The agent-specific threat catalogue. warden\'s home is Tool Misuse (T2), Privilege Compromise (T3), and Unexpected RCE (T11), plus Repudiation (T8) via its tamper-evident audit — with the multi-agent and social threats out of scope by design.' },
   );
 
   const matrixLines = ['## Family → framework matrix', '',
@@ -343,7 +343,7 @@ export function build() {
   atlasLines.push('');
 
   const nistLines = ['## NIST AI RMF (function alignment)', '',
-    'redstamp is a **MEASURE**-and-**MANAGE** control: it measures the risk of each agent action against a policy and manages the response (allow / escalate / block), with the audit log serving **GOVERN** accountability and the poisoned-skill scan serving **MAP** context.', ''];
+    'warden is a **MEASURE**-and-**MANAGE** control: it measures the risk of each agent action against a policy and manages the response (allow / escalate / block), with the audit log serving **GOVERN** accountability and the poisoned-skill scan serving **MAP** context.', ''];
 
   const tally = [...perFamily.values()].reduce((a, r) => ({
     malTot: a.malTot + r.block.tot, malBlocked: a.malBlocked + r.block.prevented,
@@ -355,7 +355,7 @@ export function build() {
   const md = [
     '# Framework coverage',
     '',
-    `> redstamp\'s ${nonBenign.length} detection families mapped onto the frameworks security teams already use — **OWASP Top 10 for LLM Apps (2025)**, **OWASP Agentic AI Threats**, **MITRE ATT&CK**, **MITRE ATLAS**, and **NIST AI RMF** — with every coverage claim backed by a measured recall number from the arena corpus (\`corpus.json\`, ${corpus.total} samples).`,
+    `> warden\'s ${nonBenign.length} detection families mapped onto the frameworks security teams already use — **OWASP Top 10 for LLM Apps (2025)**, **OWASP Agentic AI Threats**, **MITRE ATT&CK**, **MITRE ATLAS**, and **NIST AI RMF** — with every coverage claim backed by a measured recall number from the arena corpus (\`corpus.json\`, ${corpus.total} samples).`,
     '',
     `Generated by \`node arena/frameworks.mjs\` — never hand-edited. Recall figures use the same \`decide()\` and posture as the arena, so they match [RESULTS.md](RESULTS.md).`,
     '',
@@ -374,9 +374,9 @@ export function build() {
     nistLines.join('\n'),
     '## Honest scope',
     '',
-    'This matrix is a **map, not a trophy**. redstamp is one layer — the action firewall between an agent and its tools. Rows marked *out of scope* (training-data poisoning, embeddings, misinformation, multi-agent social threats) are addressed by other layers (retrieval guards, provenance pinning, alignment training), not by this classifier, and saying so is the point. The families it does cover are backed by an open, reproducible corpus and the same `decide()` the product ships.',
+    'This matrix is a **map, not a trophy**. warden is one layer — the action firewall between an agent and its tools. Rows marked *out of scope* (training-data poisoning, embeddings, misinformation, multi-agent social threats) are addressed by other layers (retrieval guards, provenance pinning, alignment training), not by this classifier, and saying so is the point. The families it does cover are backed by an open, reproducible corpus and the same `decide()` the product ships.',
     '',
-    '_Provenance: framework item lists are the published OWASP / MITRE / NIST catalogues; family→item mappings and scope verdicts are maintained in `arena/frameworks.mjs`; recall numbers are regenerated from `arena/corpus.json`. MIT, same as redstamp._',
+    '_Provenance: framework item lists are the published OWASP / MITRE / NIST catalogues; family→item mappings and scope verdicts are maintained in `arena/frameworks.mjs`; recall numbers are regenerated from `arena/corpus.json`. MIT, same as warden._',
     '',
   ].join('\n');
 

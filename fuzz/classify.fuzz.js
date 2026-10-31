@@ -1,4 +1,4 @@
-// Fuzz redstamp's deterministic classifier — the firewall that sits in the host
+// Fuzz warden's deterministic classifier — the firewall that sits in the host
 // agent's hot path on EVERY tool call. Its headline contract (src/index.mjs:
 // "must yield a verdict, never throw into the host agent") is the invariant:
 // arbitrary bytes as a tool command must never throw and must always return a

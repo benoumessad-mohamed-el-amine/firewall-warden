@@ -9,7 +9,7 @@ export interface McpCallRequest {
 }
 
 export interface McpGuardOptions {
-  /** Map specific MCP tool names to redstamp tools, e.g. `{ run_query: 'read' }`. */
+  /** Map specific MCP tool names to warden tools, e.g. `{ run_query: 'read' }`. */
   nameMap?: Record<string, string>;
   skillText?: string;
   audit?: AuditSink | null;
@@ -21,7 +21,7 @@ export interface McpGuardResult {
   action: Action;
 }
 
-/** Map an MCP tool name and arguments to a redstamp action. */
+/** Map an MCP tool name and arguments to a warden action. */
 export declare function mapMcpToAction(name: unknown, args?: Record<string, unknown>, nameMap?: Record<string, string>): Action;
 
 /** Firewall one MCP `tools/call` request. */

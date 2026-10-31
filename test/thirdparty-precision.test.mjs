@@ -1,4 +1,4 @@
-// Continuous guardrail: redstamp must keep ZERO hard false-positives on the
+// Continuous guardrail: warden must keep ZERO hard false-positives on the
 // third-party benign command sets (tldr-pages real commands + Atomic Red Team
 // benign discovery). Precision on external benign work is the number that
 // decides whether anyone leaves the firewall turned on — a regression that

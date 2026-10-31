@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { injectionHits, EXFIL_INTENT_RE, SENSITIVE_PATH_EXFIL_RE } from '../src/scan.mjs';
 import { scanMcpTools } from '../src/mcp.mjs';
 
-// redstamp#75 / #90 — 'exfiltration intent' used to be the bare words
+// warden#75 / #90 — 'exfiltration intent' used to be the bare words
 // `exfiltrate` / `leak` / `steal` with nothing else required. It now needs an
 // object worth taking or a destination to send it to, in the same clause.
 //
@@ -16,7 +16,7 @@ const exfil = (t) => injectionHits(t).includes('exfiltration intent');
 
 // ── the two published false positives ───────────────────────────────────────
 
-test('redstamp#75: newrelic:kubernetes no longer reads as exfiltration intent', () => {
+test('warden#75: newrelic:kubernetes no longer reads as exfiltration intent', () => {
   // Verbatim shape from the issue's minimal repro: a vendor "Security Rules"
   // section (which trips instruction-override on a QUOTED attack string) plus
   // an example answer whose only exfil token is "…or fix the leak."
@@ -45,7 +45,7 @@ test('redstamp#75: newrelic:kubernetes no longer reads as exfiltration intent', 
   assert.ok(flags.includes('instruction-override'), 'instruction-override behaviour is unchanged');
 });
 
-test('redstamp#90: an engineering compound in prose is not exfiltration intent', () => {
+test('warden#90: an engineering compound in prose is not exfiltration intent', () => {
   // The NAME is blanked before the intent scan (mcp.mjs blankNameValue), but a
   // hyphen-joined compound in the DESCRIPTION is not — and `-` is a word
   // boundary to `\b`, so plain `\bleak\b` matched inside `memory-leak`.

@@ -103,6 +103,6 @@ test('sudo is still denied under the global policy', () => {
 // ── and the false positive the bug caused is gone ──
 
 test('ordinary GitHub traffic is no longer treated as external egress', () => {
-  const v = check({ tool: 'shell', input: { command: 'gh pr list --repo askalf/redstamp' } }, globalPolicy);
+  const v = check({ tool: 'shell', input: { command: 'gh pr list --repo askalf/warden' } }, globalPolicy);
   assert.notEqual(v.tier, TIER.BLACK, 'routine gh traffic must not be black under a global policy');
 });

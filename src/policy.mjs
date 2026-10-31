@@ -62,17 +62,17 @@ export function normalizeProvenance(prov) {
 }
 
 // The project policy file was `warden.config.json` before the rename. A fresh
-// `redstamp init` now writes `redstamp.config.json`, but an existing
+// `warden init` now writes `warden.config.json`, but an existing
 // `warden.config.json` is still read transparently (see resolveConfig) so a
 // project set up before the rename keeps working. (The GLOBAL config at
 // `~/.warden/config.json` and the `WARDEN_*` env vars are kept as-is for
 // compatibility — only the project filename gets the branded default.)
-export const DEFAULT_CONFIG = 'redstamp.config.json';
+export const DEFAULT_CONFIG = 'warden.config.json';
 export const LEGACY_CONFIG = 'warden.config.json';
 
 /** Pick the project config file when no explicit `--policy` is given: prefer
- *  `redstamp.config.json`, fall back to an existing `warden.config.json`, and
- *  default to `redstamp.config.json` when neither exists. */
+ *  `warden.config.json`, fall back to an existing `warden.config.json`, and
+ *  default to `warden.config.json` when neither exists. */
 export function resolveConfig(explicit, dir = process.cwd()) {
   if (typeof explicit === 'string' && explicit) return explicit;
   for (const name of [DEFAULT_CONFIG, LEGACY_CONFIG]) {

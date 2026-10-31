@@ -1,4 +1,4 @@
-// Fuzz redstamp's injection / secret / SSRF scanners through the poisoned-skill
+// Fuzz warden's injection / secret / SSRF scanners through the poisoned-skill
 // entrypoint. check(action, policy, { skillText }) runs the INJECTION_RE /
 // SECRET_RE / METADATA_RE battery over untrusted skill text AND tool input — the
 // exact regexes the ReDoS guard (bench/redos.mjs) protects. Invariant: arbitrary

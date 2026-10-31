@@ -12,7 +12,7 @@
 // LICENSE: tldr-pages content is CC-BY-4.0 (the scripts/ dir is MIT). We vendor
 // a normalized, derived SUBSET with attribution + a note that we extracted and
 // substituted placeholders (see NOTICE below and arena/THIRD-PARTY-CORPORA.md).
-// CC-BY content sits alongside redstamp's MIT code under attribution; we do not
+// CC-BY content sits alongside warden's MIT code under attribution; we do not
 // relicense it.
 //
 // HONESTY — why we FILTER, not just relabel: tldr documents dual-use and

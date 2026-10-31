@@ -1,4 +1,4 @@
-// Regression tests for the detection gaps found by scoring redstamp against
+// Regression tests for the detection gaps found by scoring warden against
 // Atomic Red Team (the third-party ATT&CK corpus). Each `catches` test pins an
 // attack shape that scored GREEN before this work; each `does not catch` test
 // pins the benign command that shares the same vocabulary, because every one of

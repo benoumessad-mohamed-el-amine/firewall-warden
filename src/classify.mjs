@@ -409,7 +409,7 @@ export const RED_SHELL = [
   // (a trailing slash on a sync source is a no-op for both tools, so the two are
   // identical and must classify the same) at an argument boundary — but not a
   // named subdir (`/home/app/dist`), so deploys of build output stay clean.
-  // (`\/home\b(?!\/)` missed the trailing-slash form — redstamp#99 review.)
+  // (`\/home\b(?!\/)` missed the trailing-slash form — warden#99 review.)
   { re: /\b(?:rclone\s+(?:copy|sync|move|copyto|moveto)|aws\s+s3\s+(?:sync|cp|mv))\b(?=[^|]*(?:\.ssh\b|\.aws\b|\.env\b|\.gnupg\b|\.kube\b|id_rsa\b|id_ed25519\b|credentials\b|secring\b|\/etc\/|\/root\b|\/home\/?(?=[\s"';|&]|$)|\.git-credentials\b))/i, why: 'bulk copy of a sensitive source to remote storage (possible exfil)' },
   { re: /\bInvoke-WmiMethod\b/i, why: 'WMI method invocation' },
   // vssadmin CREATE shadow is dual-use (legit backups; also the standard prep to

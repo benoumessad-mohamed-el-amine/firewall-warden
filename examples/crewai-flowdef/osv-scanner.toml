@@ -1,6 +1,6 @@
 # Suppression scoped to this example's manifest (requirements.txt) only.
 #
-# redstamp's own supply chain is not affected by anything below. No workflow
+# warden's own supply chain is not affected by anything below. No workflow
 # installs this file — the only pip steps in CI are arena.yml's, which install
 # hash-pinned closures of the competitors the arena scores (see
 # arena/osv-scanner.toml for what those pull in and why they stay pinned).

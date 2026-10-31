@@ -170,7 +170,7 @@ corpus holds at 100% recall and 100% precision.
 
 ### Added: TypeScript declarations
 
-Every public entry point (`@askalf/redstamp` plus `/mcp`, `/judge`, `/wrap`,
+Every public entry point (`@askalf/warden` plus `/mcp`, `/judge`, `/wrap`,
 `/daemon`, `/client`, `/audit`, `/scan`, `/taint`) now ships a hand-written
 `.d.mts` beside its source, wired through a `types` condition in `exports`.
 `Verdict`, `Action`, `Policy`, `Tier`, `Decision` and `Judge` are exported as
@@ -199,7 +199,7 @@ The declarations need TypeScript 5.0 or later.
   now reference the `FLAGSEP` / `ARGSEP` constants (#127). All 113 shell rules
   were verified byte-identical before and after.
 - The arena's mcp-firewall lockfile moves to `cryptography` 50.0.0
-  (CVE-2026-69247) (#127). Arena-only; redstamp itself has no dependencies.
+  (CVE-2026-69247) (#127). Arena-only; warden itself has no dependencies.
 - README reorganized to lead with the scoreboard; reference material moved to
   `docs/` (#131, #153).
 
@@ -247,7 +247,7 @@ Corpus unchanged at 298 samples: deterministic recall **100%**, precision
 
 ### Note on distribution
 
-npm remains a **pointer stub** (`@askalf/redstamp` 0.0.3) and `NPM_PUBLISH_ENABLED`
+npm remains a **pointer stub** (`@askalf/warden` 0.0.3) and `NPM_PUBLISH_ENABLED`
 stays off — see 0.7.4. This release ships as the git tag plus the signed GitHub
 release with Sigstore provenance, which is the only distribution channel. There
 is no npm 0.7.x line and this release does not create one.
@@ -261,7 +261,7 @@ is no npm 0.7.x line and this release does not create one.
 be seen — so a security note, a changelog entry, or a threat-model doc that
 quotes the shape it warns about was blocked. A false positive aimed squarely at
 the people this tool is for; it fired three times in one day while writing about
-redstamp itself.
+warden itself.
 
 - **The exemption is narrow by construction.** `shellSkeleton()` blanks quoted
   spans and heredoc bodies, leaving roughly the words a shell would execute. A
@@ -288,7 +288,7 @@ classifier while keeping the corpus drops precision to 97% and fails the new
 test — the samples have teeth.
 
 ### Changed
-- **npm is a pointer, permanently.** `@askalf/redstamp` on the registry is now a
+- **npm is a pointer, permanently.** `@askalf/warden` on the registry is now a
   deprecated stub (`npm-stub/`, v0.0.3) that throws on import and points at the
   signed GitHub release. npm's automated content scan rejects the real tarball —
   its detection-signature corpus reads as malware — and an allowlist review was
@@ -333,7 +333,7 @@ also closes a genuine detection gap — see below. Bench recall is unchanged at
 No API, policy-schema, or audit-format changes — a drop-in upgrade from 0.7.2.
 
 ### Why this release exists
-`truecopy` pins redstamp by commit SHA precisely because these fixes landed
+`truecopy` pins warden by commit SHA precisely because these fixes landed
 after 0.7.2 and had no release to point at. npm v12 blocks git dependencies by
 default, so that SHA pin breaks every truecopy install route once runners move
 to npm 12. Cutting a release containing them lets truecopy pin a signed release
@@ -570,7 +570,7 @@ the same bytes (each was invisible: green, not even gray-routed):**
   can now anchor the chain head in a `0600` `<audit>.chk` checkpoint (`{ checkpoint: true }`,
   which the streaming daemon enables), and `verifyAuditFile(path, { head, count })`
   flags a log that no longer ends where the checkpoint says (`truncated`/`rollback`,
-  surfaced by `redstamp verify`). A same-directory attacker who rewrites both is still
+  surfaced by `warden verify`). A same-directory attacker who rewrites both is still
   out of reach of a same-fs sidecar; retain the checkpoint on separate-trust storage
   for full protection. SECURITY.md's tamper-evidence scope updated to match.
 - **Write-root confinement no longer bypassable by `..` traversal or a shared-prefix
@@ -586,22 +586,22 @@ the same bytes (each was invisible: green, not even gray-routed):**
 ## [0.5.0] - 2026-07-11
 
 ### Changed
-- **`redstamp init` now writes `redstamp.config.json`** (was `warden.config.json`),
-  and `redstamp check` / `redstamp-mcp` default to it — completing the config-file
-  half of the warden→redstamp rename (the docs already advertised
-  `redstamp.config.json`, but the code still defaulted to `warden.config.json`, so
+- **`warden init` now writes `warden.config.json`** (was `warden.config.json`),
+  and `warden check` / `warden-mcp` default to it — completing the config-file
+  half of the warden→warden rename (the docs already advertised
+  `warden.config.json`, but the code still defaulted to `warden.config.json`, so
   a user following the README got a gate that loaded no policy). **Fully
   back-compatible:** with no `--policy`, an existing `warden.config.json` is still
   read transparently, so a project set up before the rename keeps working — only a
   fresh `init` writes the branded name. Help text updated and the example is now
-  `redstamp.config.example.json`. The `~/.warden/` **global** config, the audit
+  `warden.config.example.json`. The `~/.warden/` **global** config, the audit
   log, and the `WARDEN_*` env vars are intentionally unchanged.
 
 ## 0.4.1
 
-- **Renamed: `@askalf/warden` → `@askalf/redstamp`** (npm-publishable name; the old name collides with an existing unscoped package and is create-blocked by the registry). GitHub repo becomes `askalf/redstamp` (old URLs redirect). Legacy `warden`/`warden-mcp`/`warden-hook`/`warden-serve` bin aliases retained alongside the new `redstamp*` bins. `WARDEN_*` env vars unchanged.
+- **Renamed: `@askalf/warden` → `@askalf/warden`** (npm-publishable name; the old name collides with an existing unscoped package and is create-blocked by the registry). GitHub repo becomes `askalf/warden` (old URLs redirect). Legacy `warden`/`warden-mcp`/`warden-hook`/`warden-serve` bin aliases retained alongside the new `warden*` bins. `WARDEN_*` env vars unchanged.
 
-All notable changes to **@askalf/redstamp** (formerly `@askalf/warden`) are documented here. The format is
+All notable changes to **@askalf/warden** (formerly `@askalf/warden`) are documented here. The format is
 based on [Keep a Changelog](https://keepachangelog.com/), and this project
 adheres to [Semantic Versioning](https://semver.org/).
 

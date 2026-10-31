@@ -1,11 +1,11 @@
-# redstamp and MCP
+# warden and MCP
 
 ## MCP middleware
 
 Firewall an MCP server's tool-calls, and scan its advertised tools for poisoning:
 
 ```js
-import { guardHandler, scanMcpTools } from '@askalf/redstamp/mcp';
+import { guardHandler, scanMcpTools } from '@askalf/warden/mcp';
 
 // 1) supply-chain: catch malicious instructions hidden in tool descriptions
 const findings = scanMcpTools(server.tools); // [{ tool, flags, severity, hits }]
@@ -25,10 +25,10 @@ server.setHandler(guardHandler(realHandler, policy, {
 Wrap **any** MCP server with the firewall — no code changes to client or server:
 
 ```bash
-redstamp-mcp --policy redstamp.config.json -- npx -y @modelcontextprotocol/server-filesystem /workspace
+warden-mcp --policy warden.config.json -- npx -y @modelcontextprotocol/server-filesystem /workspace
 ```
 
-Point your MCP client (Claude Code, Claude Desktop, …) at `redstamp-mcp` instead of the server directly:
+Point your MCP client (Claude Code, Claude Desktop, …) at `warden-mcp` instead of the server directly:
 
 - every `tools/call` is firewalled before it reaches the server;
 - **poisoned tools are stripped from `tools/list`** before the client ever sees them;

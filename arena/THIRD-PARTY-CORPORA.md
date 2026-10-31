@@ -1,6 +1,6 @@
 # Third-party corpora — provenance, licenses, and roadmap
 
-The arena's default corpus (`corpus.json`) is redstamp-authored, so redstamp
+The arena's default corpus (`corpus.json`) is warden-authored, so warden
 topping it "proves capability, not neutrality" (the arena README says so). This
 directory adds corpora **nobody here wrote**, so the numbers can't be graded
 homework. Each is fetched from its upstream source by a committed builder and
@@ -25,7 +25,7 @@ Scored by `node arena/thirdparty.mjs` → [THIRD-PARTY-RESULTS.md](THIRD-PARTY-R
   extracted from `atomics/<technique>/<technique>.yaml` executor blocks with
   input-argument defaults substituted; a derived subset.
 
-The combined corpus set is therefore a **mix of licenses** — redstamp's own code
+The combined corpus set is therefore a **mix of licenses** — warden's own code
 and tooling are MIT, tldr content is CC-BY-4.0, Atomic content is MIT. This file
 is the attribution manifest; keep it in sync with any new import.
 
@@ -38,7 +38,7 @@ is the attribution manifest; keep it in sync with any new import.
   credential/evasion/C2), approve (dual-use), or allow (discovery) — in
   `build-thirdparty-atomic.mjs`. The `allow` (discovery) set is a genuine
   precision test drawn from the same source as the attacks.
-- **Axis-aware reading.** redstamp classifies command *semantics*. Atomic tests
+- **Axis-aware reading.** warden classifies command *semantics*. Atomic tests
   that run a pre-staged binary (`mimikatz.exe`) are tagged `opaque-binary` and
   read as a documented axis limit, not a miss — the same way the arena reads
   LlamaFirewall on the injection slice only.
@@ -51,7 +51,7 @@ is the attribution manifest; keep it in sync with any new import.
 ## What this surfaced (the point of an external corpus)
 
 The Atomic Red Team import did exactly what an outside corpus is for: it found
-**redstamp missing real, on-axis command-semantic attacks** its own corpus never
+**warden missing real, on-axis command-semantic attacks** its own corpus never
 exercised. The first run scored **10/31 hard-block, 13/31 prevented — 18 attacks
 silently allowed**, against 100% on the in-repo corpus. The themes were coherent
 rather than random, which is what made them fixable: exfil over ssh/tar and DNS;

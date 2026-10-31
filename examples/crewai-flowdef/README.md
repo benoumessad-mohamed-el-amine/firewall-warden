@@ -75,7 +75,7 @@ python dump_flow_definition.py            # -> the FlowDefinition (schema_: crew
   constructs a Chroma client, and `_musl_rag_shim.py` stubs the subtree, so this
   example does not reach the vulnerable code; `osv-scanner.toml` records that.
   If you adapt this file into something that *does* use CrewAI's vector memory,
-  re-evaluate. Nothing redstamp itself ships depends on chromadb.
+  re-evaluate. Nothing warden itself ships depends on chromadb.
 - **Next step (LLM-driven).** This example governs a Flow's tool surface with
   deterministic steps. To govern an LLM's *tool choices*, put a CrewAI `Agent`
   in a Flow step and supply its tools via `crewai-tools`' `MCPServerAdapter`

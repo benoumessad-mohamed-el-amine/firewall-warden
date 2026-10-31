@@ -6,7 +6,7 @@
 //                      corpus that persists between runs keeps getting deeper. Unset: no corpus.
 //   FUZZ_ARTIFACT_DIR  where a crashing input is written, created on demand. Unset: the cwd.
 //
-// redstamp's runtime is zero-dependency, so Jazzer is NOT a devDependency: it is fetched on demand
+// warden's runtime is zero-dependency, so Jazzer is NOT a devDependency: it is fetched on demand
 // with `npx --package`. Nothing is added to package.json or the tarball.
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readdirSync } from 'node:fs';
