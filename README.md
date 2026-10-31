@@ -7,7 +7,7 @@
 *Same call → same verdict, every time. No model in the decision path. Zero runtime dependencies.*
 
 [![GitHub Repo](https://img.shields.io/badge/GitHub-benoumessad--mohamed--el--amine%2Ffirewall--warden-blue?logo=github)](https://github.com/benoumessad-mohamed-el-amine/firewall-warden)
-[![Tests: 400 passed](https://img.shields.io/badge/tests-400%20passing-brightgreen)](#testing)
+[![Tests: 400 passed](https://img.shields.io/badge/tests-400%20passing-brightgreen)](#the-scoreboard)
 [![Dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen)](package.json)
 [![Node.js: >=20](https://img.shields.io/badge/node-%3E%3D20-informational?logo=node.js)](package.json)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
@@ -15,7 +15,7 @@
 **100% recall at 100% precision** on a 298-sample, 25-family attack corpus scored head-to-head.<br>
 Governs **LangGraph**, the **OpenAI Agents SDK**, **CrewAI**, **AutoGen**, and any **MCP server**.
 
-[Quick Start](#quick-start) · [How It Decides](#how-it-decides) · [Scoreboard](#the-scoreboard) · [Surfaces & Integration](#every-surface-an-agent-uses) · [CLI Usage](#cli-usage)
+[Quick Start](#quick-start) · [MCP Proxy](#mcp-proxy-drop-in-protection) · [How It Decides](#how-it-decides) · [Scoreboard](#the-scoreboard) · [Surfaces & Integration](#every-surface-an-agent-uses) · [CLI Usage](#cli-usage)
 
 </div>
 
@@ -28,7 +28,7 @@ Autonomous agents convert model predictions into real system commands and extern
 Using an LLM to guard an LLM introduces latency, cost, and the exact same prompt injection vulnerabilities it tries to prevent.
 
 **firewall-warden** takes the model out of the security enforcement path:
-- ⚡ **Zero model calls:** 100% offline, reproducible, sub-millisecond verdicts (~60 µs).
+- ⚡ **Zero model calls:** 100% offline, reproducible, sub-millisecond verdicts (~58 µs).
 - 🔒 **Zero runtime dependencies:** Built entirely on native Node.js standard libraries.
 - 📜 **Cryptographic Audit:** Tamper-evident SHA-256 hash-chained log for full governance and compliance.
 
@@ -37,7 +37,7 @@ Using an LLM to guard an LLM introduces latency, cost, and the exact same prompt
 ## Quick Start
 
 ### 1. Clone & Run
-Requires Node.js `>=20`. Zero external packages needed:
+Requires Node.js `>=20`. Zero external packages or build steps needed:
 
 ```bash
 git clone https://github.com/benoumessad-mohamed-el-amine/firewall-warden.git
@@ -60,6 +60,55 @@ Run the full test suite (400 tests):
 ```bash
 npm test
 ```
+
+---
+
+## MCP Proxy (Drop-in Protection)
+
+Protect any MCP server without changing a single line of client or server code.
+
+### Run Directly via npx (No Clone Needed)
+You can run the proxy directly using `npx`:
+
+```bash
+npx -y github:benoumessad-mohamed-el-amine/firewall-warden warden-mcp -- npx -y @modelcontextprotocol/server-filesystem /workspace
+```
+
+Or run it locally if you cloned the repo:
+```bash
+node src/mcp-proxy-cli.mjs --policy warden.config.json -- <your-mcp-server-command>
+```
+
+### Drop-in Config for Claude Desktop / Cursor
+Add `warden-mcp` in front of your tools in `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "github:benoumessad-mohamed-el-amine/firewall-warden",
+        "warden-mcp",
+        "--policy",
+        "warden.config.json",
+        "--",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/path/to/allowed/directory"
+      ]
+    }
+  }
+}
+```
+
+**What the proxy enforces automatically:**
+1. **Strips Poisoned Tools:** Scans tool descriptions and neutralizes prompt-injection payloads from `tools/list` before the LLM ever sees them.
+2. **Pre-execution Firewall:** Every `tools/call` is firewalled and blocked if dangerous.
+3. **Cross-Call Taint Tracking:** Catches multi-step exfiltration (e.g. reading an env secret on call 1 and sending a temp file on call 2).
+4. **Clean Tool Errors:** Blocks are surfaced back to the model as structured tool errors.
 
 ---
 
@@ -153,22 +202,6 @@ node src/cli.mjs verify
 
 ---
 
-## MCP Proxy (Drop-in Protection)
-
-Protect any MCP server without changing a single line of client or server code:
-
-```bash
-node src/mcp-proxy-cli.mjs --policy warden.config.json -- <your-mcp-server-command>
-```
-
-**What the proxy enforces automatically:**
-1. **Strips Poisoned Tools:** Scans tool descriptions and neutralizes prompt-injection payloads from `tools/list` before the LLM ever sees them.
-2. **Pre-execution Firewall:** Every `tools/call` is firewalled and blocked if dangerous.
-3. **Cross-Call Taint Tracking:** Catches multi-step exfiltration (e.g. reading an env secret on call 1 and sending a temp file on call 2).
-4. **Clean Tool Errors:** Blocks are surfaced back to the model as structured tool errors.
-
----
-
 ## The Scoreboard
 
 Evaluated head-to-head on the 298-sample, 25-family attack corpus ([arena/RESULTS.md](arena/RESULTS.md)):
@@ -182,6 +215,12 @@ Evaluated head-to-head on the 298-sample, 25-family attack corpus ([arena/RESULT
 | Pipelock (Scan API) | Yes | Yes | 6.0% | 6.0% | 96.5% | 38/44 | 0 µs |
 | AEGIS | Yes | Yes | 4.2% | 54.8% | 100% | 29/44 | 1000 µs |
 | mcp-firewall | Yes | Yes | 8.3% | 100.0% | 96.5% | 0/44 | 50 µs |
+
+> [!NOTE]
+> **Understanding the 100% Recall / 100% Precision figures:**
+> Security benchmarks with 100% scores rightly invite skepticism. This scoreboard measures deterministic structural patterns (path traversal, LOLBins, credential dumping, reverse shells, secret exfiltration pipelines, and known prompt-injection signatures) against a frozen 298-sample test harness across 25 threat families ([arena/corpus.json](arena/corpus.json)).
+> 
+> It is **not** an assertion that all future open-ended semantic prompt injections are solved. Deterministic firewalls prioritize high precision and zero false-positives on benign tools, combined with strict fail-closed enforcement on known attack vectors. Third-party corpora benchmarks (Atomic Red Team, tldr-pages) are documented in [arena/THIRD-PARTY-RESULTS.md](arena/THIRD-PARTY-RESULTS.md).
 
 ---
 
