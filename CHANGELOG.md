@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+### Documentation & repo hygiene
+
+- Repository documentation pass: updated determinism claim to reflect session history and policy context.
+- Added comprehensive Architecture, How Gating Works, Limitations, and Worked Examples sections to README.md.
+- Added SECURITY.md covering vulnerability reporting, supported threat model, and scope limitations.
+- Verified test suite (400 passing tests), attack corpus counts (298 samples, 25 families), and median decision latency (~58 µs).
+- Clarified SHA-256 hash-chain guarantees and out-of-band checkpointing in audit logging documentation.
+- Standardized package.json repository, bugs, homepage, and keyword metadata.
+- Removed decorative emojis across all documentation files.
+
 ### Added: path-level egress confinement (U5)
 
 - `egressAllow` entries now support path globs (e.g. `api.github.com/repos/ORG/*`).

@@ -69,15 +69,21 @@
     "arena:build-atomic": "node arena/build-thirdparty-atomic.mjs"
   },
   "keywords": [
-    "agent",
-    "security",
+    "ai-agents",
     "mcp",
-    "llm",
-    "guardrails",
-    "ai-safety",
+    "llm-security",
     "firewall",
-    "own-your-stack"
+    "prompt-injection",
+    "agent-security"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/benoumessad-mohamed-el-amine/firewall-warden.git"
+  },
+  "bugs": {
+    "url": "https://github.com/benoumessad-mohamed-el-amine/firewall-warden/issues"
+  },
+  "homepage": "https://github.com/benoumessad-mohamed-el-amine/firewall-warden#readme",
   "license": "MIT",
   "engines": {
     "node": ">=20"
